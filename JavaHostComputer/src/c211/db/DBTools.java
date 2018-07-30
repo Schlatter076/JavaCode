@@ -5,11 +5,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.*;
+
+
+import c211.client.*;
+import c211.serial.*;
 
 /**
  * 数据库工具类
  * @author Loyer
- * @coding: utf8
+ * @coding utf8
  */
 public class DBTools {
   Connection connection = null;
@@ -28,7 +33,7 @@ public class DBTools {
    * @param date
    * @return 
    */
-  public boolean testsystemInsert(String buzhou, String buzhouname, String testdata, String min, String max, String result, String condition, String date) {
+  public int testsystemInsert(String buzhou, String buzhouname, String testdata, String min, String max, String result, String condition, String date) {
     
     int getBack = 0;
     String sql = "insert into testsystem values(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -49,15 +54,12 @@ public class DBTools {
       getBack = pstmt.executeUpdate(); 
     } catch(SQLException e) {
       e.printStackTrace();
-      return false;
       
     } catch(Exception e) {
-      e.printStackTrace();
-      return false;
-      
+      e.printStackTrace();      
     }
     
-    return true;  
+    return getBack;  
   }
   /**
    * 提供testsystem表查询方法
@@ -78,17 +80,23 @@ public class DBTools {
     
     return true;
   }
-  public static void main(String[] args) {
-    DBTools dbt = new DBTools();
-    for(int i = 1; i <= 15; i++) {
-      if(i <= 9)
-        dbt.testsystemInsert("00003-0" + i, null, null, null, null, null, null, "2018-07-28");
-      else
-        dbt.testsystemInsert("00003-" + i, null, null, null, null, null, null, "2018-07-28");
-    }
-    dbt.testsystemExecute();
-    int i = new RecordOneDayTools().truncateRecordoneday();
-    System.out.println(i);
+  /**
+   * 测试程序
+   * @param args
+   * @throws Exception
+   */
+  public static void main(String[] args) throws Exception {
+    //UserTools userT = new UserTools();
+    List<SerialPortHelper> list = UserTools.getportnameByxuhao(2);
+    for(Iterator<SerialPortHelper> i = list.iterator();i.hasNext(); ) { 
+      SerialPortHelper str = i.next(); 
+      System.out.println(str); 
+    } 
+    /*
+    for(int i = 0; i < list.size(); i++)
+      System.out.println((SerialPortHelper)(list.get(i)));
+    */
+    
   }
   
 }

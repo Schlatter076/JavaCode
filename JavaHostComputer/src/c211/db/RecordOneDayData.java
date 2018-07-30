@@ -1,7 +1,11 @@
 package c211.db;
 
 
-
+/**
+ * recordoneday表的实体
+ * @author Loyer
+ * @coding utf8
+ */
 public class RecordOneDayData {
   
   private String recordname;
@@ -14,149 +18,83 @@ public class RecordOneDayData {
   private String testresult;
   private String recorddate;
   private String remark;
-  public String recordName;
   
   /**
-   * 
-   * @param recordname
+   * 构造器
    */
+  public RecordOneDayData() {}
+  public RecordOneDayData(String recordname, String recordtimes, String testitem, String maxvalue, String minvalue, String testvalue, 
+                          String danwei, String testresult, String recorddate, String remark) {
+    this.recordname = recordname;
+    this.recordtimes = recordtimes;
+    this.testitem = testitem;
+    this.maxvalue = maxvalue;
+    this.minvalue = minvalue;
+    this.testvalue = testvalue;
+    this.danwei = danwei;
+    this.testresult = testresult;
+    this.recorddate = recorddate;
+    this.remark = remark;
+  }
   public void setRecordname(String recordname) {
     this.recordname = recordname;
   }
-  /**
-   * 
-   * @return
-   */
   public String getRecordname() {
-    return this.recordname;
+    return recordname;
   }
-  /**
-   * 
-   * @param recordtimes
-   */
   public void setRecordtimes(String recordtimes) {
     this.recordtimes = recordtimes;
   }
-  /**
-   * 
-   * @return
-   */
   public String getRecordtimes() {
-    return this.recordtimes;
+    return recordtimes;
   }
-  /**
-   * 
-   * @param testitem
-   */
   public void setTestitem(String testitem) {
     this.testitem = testitem;
   }
-  /**
-   * 
-   * @return
-   */
   public String getTestitem() {
-    return this.testitem;
+    return testitem;
   }
-  /**
-   * 
-   * @param maxvalue
-   */
   public void setMaxvalue(String maxvalue) {
     this.maxvalue = maxvalue;
   }
-  /**
-   * 
-   * @return
-   */
   public String getMaxvalue() {
-    return this.maxvalue;
+    return maxvalue;
   }
-  /**
-   * 
-   * @param minvalue
-   */
   public void setMinvalue(String minvalue) {
     this.minvalue = minvalue;
   }
-  /**
-   * 
-   * @return
-   */
   public String getMinvalue() {
-    return this.minvalue;
+    return minvalue;
   }
-  /**
-   * 
-   * @param testvalue
-   */
   public void setTestvalue(String testvalue) {
     this.testvalue = testvalue;
   }
-  /**
-   * 
-   * @return
-   */
   public String getTestvalue() {
-    return this.testvalue;
+    return testvalue;
   }
-  /**
-   * 
-   * @param danwei
-   */
   public void setDanwei(String danwei) {
     this.danwei = danwei;
   }
-  /**
-   * 
-   * @return
-   */
   public String getDanwei() {
-    return this.danwei;
+    return danwei;
   }
-  /**
-   * 
-   * @param testresult
-   */
   public void setTestresult(String testresult) {
     this.testresult = testresult;
   }
-  /**
-   * 
-   * @return
-   */
   public String getTestresult() {
-    return this.testresult;
+    return testresult;
   }
-  /**
-   * 
-   * @param recorddate
-   */
   public void setRecorddata(String recorddate) {
     this.recorddate = recorddate;
   }
-  /**
-   * 
-   * @return
-   */
   public String getRecorddate() {
-    return this.recorddate;
+    return recorddate;
   }
-  /**
-   * 
-   * @param remark
-   */
   public void setRemark(String remark) {
     this.remark = remark;
   }
-  /**
-   * 
-   * @return
-   */
   public String getRemark() {
-    return this.remark;
+    return remark;
   }
-  
-  
-  
+   
 }
