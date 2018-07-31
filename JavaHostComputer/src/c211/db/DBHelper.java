@@ -54,8 +54,8 @@ public class DBHelper {
    * @throws Exception
    */
   public  ResultSet Search(String sql, String str[]) throws Exception {
-    connection = getConnection();
     try {
+      connection = getConnection();
       PreparedStatement pstmt = connection.prepareStatement(sql);
       if(str != null) {
         for(int i = 0; i < str.length; i++) {
@@ -77,8 +77,8 @@ public class DBHelper {
    */
   public int AddU(String sql, String str[]) throws Exception {
     int getBack = 0;
-    connection = getConnection();
     try {
+      connection = getConnection();
       PreparedStatement pstmt = connection.prepareStatement(sql);
       if(str != null) {
         for(int i = 0; i < str.length; i++) {

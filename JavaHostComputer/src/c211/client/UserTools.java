@@ -38,31 +38,31 @@ public class UserTools {
    * @return
    */
   public User getUserByName(String name) {
-    User user = new User();
+    User usr = new User();
     try {
       DBHelper db = new DBHelper();
-      String sql = "select * from user where user_name='" + name + "'";
+      String sql = "select * from [dbo].[user] where user_name='" + name + "'";
       ResultSet res = db.Search(sql, null);
       while(res.next()) {
-        user.setUsername(res.getString(1));
-        user.setPassword(res.getString(2));
-        user.setLimit(res.getInt(3));
-        user.setUserid(res.getInt(4));
+        usr.setUserid(res.getInt(1));
+        usr.setUsername(res.getString(2));
+        usr.setPassword(res.getString(3));
+        usr.setLimit(res.getInt(4));
       }
     } catch(Exception e) {
       e.printStackTrace();
     }
-    return user;
+    return usr;
   }
   /**
-   * 更新用户信息
+   * 更新用户密码
    * @param user_name
    * @param password
    * @return
    * @throws Exception
    */
   public int updateUser(String user_name, String password) throws Exception {
-    String sql = "update user set password='" + password + "' where user_name='" + user_name + "' ";
+    String sql = "update [dbo].[user] set password='" + password + "' where user_name='" + user_name + "' ";
     return new DBHelper().AddU(sql, null);
   }
   

@@ -88,7 +88,7 @@ public class RecordOneDayTools {
       wwb = Workbook.createWorkbook(file);
       
       //创建工作表
-      WritableSheet ws = wwb.createSheet("Test Shee 1", 0);
+      WritableSheet ws = wwb.createSheet("recordoneday", 0);
       
       //查询数据库中所有的数据
       List<RecordOneDayData> list = getAllbyDb();

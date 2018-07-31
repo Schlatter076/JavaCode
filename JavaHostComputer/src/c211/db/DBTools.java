@@ -86,12 +86,35 @@ public class DBTools {
    * @throws Exception
    */
   public static void main(String[] args) throws Exception {
-    //UserTools userT = new UserTools();
+    //String[] str = {"jj", "ba", "", "", "", "", "", "", "", null};
+    //System.out.println(RecordOneDayTools.getAllbyDb());
+    List<Recorddata> list = ECTESTSYSTools.getrecordtdItems("recordtd");
+    for(Iterator<Recorddata> i = list.iterator(); i.hasNext(); ) {
+      Recorddata rd = i.next();
+      System.out.println(rd.getRecordtime()); 
+    }
+    User us = new User();
+    us = new UserTools().getUserByName("commom");
+    System.out.println(us.getPassword());
+    System.out.println(new UserTools().updateUser("admin", "XDBT1234"));
+    new RecordOneDayTools().outFile();
+    //String[] str = {"NL-3B", "", "", "", "", "2018-07-31"};
+    //new ECTESTSYSTools().deleteProductsName("狗");
+    //UserTools ur = new UserTools();
+    //user.updateUser("commom", "password");
+   // ur.getUserByName("commom");
+    //System.out.println(user.getUserByName("commom").getPassword());
+    //new RecordOneDayTools().outFile();
+    
+    //UserTools userT = new UserTools();  updateUser("commom", "password");
+    /*UserTools ust = new UserTools();
+    System.out.println(ust.getUserByName("commom"));
     List<SerialPortHelper> list = UserTools.getportnameByxuhao(2);
+    
     for(Iterator<SerialPortHelper> i = list.iterator();i.hasNext(); ) { 
       SerialPortHelper str = i.next(); 
-      System.out.println(str); 
-    } 
+      System.out.println(str.toString()); 
+    } */
     /*
     for(int i = 0; i < list.size(); i++)
       System.out.println((SerialPortHelper)(list.get(i)));
