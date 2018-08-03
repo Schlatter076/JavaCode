@@ -88,6 +88,11 @@ public class DBTools {
   public static void main(String[] args) throws Exception {
     //String[] str = {"jj", "ba", "", "", "", "", "", "", "", null};
     //System.out.println(RecordOneDayTools.getAllbyDb());
+    List<RecordOneDayData> tableList = RecordOneDayTools.getAllbyDb();
+    for(Iterator<RecordOneDayData> i = tableList.iterator(); i.hasNext(); ) {
+      RecordOneDayData rd = i.next();
+      System.out.println(rd.getMaxvalue());
+    }
     List<Recorddata> list = ECTESTSYSTools.getrecordtdItems("recordtd");
     for(Iterator<Recorddata> i = list.iterator(); i.hasNext(); ) {
       Recorddata rd = i.next();
