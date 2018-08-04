@@ -29,6 +29,13 @@ public class SignIn {
   private JFrame signInFrame;
   private JTextField productTextF;
   private JPasswordField passwordField;
+  private JLabel productLabel;
+  private JButton addProductButt;
+  private JLabel idLabel;
+  private JComboBox<String> idField;
+  private JLabel passwordLabel;
+  private JButton signInButt;
+  private JButton exitButt;
   private User commom;
   private User admin;
 
@@ -64,6 +71,7 @@ public class SignIn {
     signInFrame.setTitle("\u767B\u5F55");
     signInFrame.setBounds(100, 100, 438, 326);
     signInFrame.setResizable(false); //窗口大小不可更改
+    //signInFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); //点X不退出
     
     Toolkit tk = Toolkit.getDefaultToolkit();
     Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
@@ -81,19 +89,15 @@ public class SignIn {
     signInFrame.getContentPane().add(productTextF);
     productTextF.setColumns(8);
     
-    JLabel productLabel = new JLabel("产品型号:");
+    productLabel = new JLabel("产品型号:");
     productLabel.setBounds(35, 11, 82, 27);
     productLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(productLabel);
     
-    JButton addProductButt = new JButton("\u6DFB\u52A0\u4EA7\u54C1\u578B\u53F7");
+    addProductButt = new JButton("\u6DFB\u52A0\u4EA7\u54C1\u578B\u53F7");
     addProductButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        //System.out.println("添加产品型号");
-        //productTextF.setText("NL-3B");
-        //addProductButt.setText("莫点我！");
-        //signInFrame.getContentPane().repaint();
         JOptionPane.showMessageDialog(addProductButt, "目前只有一个机种", "提示", JOptionPane.NO_OPTION);
       }
     });
@@ -101,7 +105,7 @@ public class SignIn {
     addProductButt.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(addProductButt);
     
-    JLabel idLabel = new JLabel("账号:");
+    idLabel = new JLabel("账号:");
     idLabel.setBounds(34, 113, 54, 21);
     idLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(idLabel);
@@ -110,7 +114,7 @@ public class SignIn {
     passwordField = new JPasswordField();  //新建密码区域
     commom = new UserTools().getUserByName("commom");
     admin = new UserTools().getUserByName("admin");
-    JComboBox<String> idField = new JComboBox<String>();
+    idField = new JComboBox<String>();
     idField.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if(!idField.getEditor().getItem().equals(commom.getUsername()))
@@ -126,7 +130,7 @@ public class SignIn {
     idField.setEditable(true);
     signInFrame.getContentPane().add(idField);
     
-    JLabel passwordLabel = new JLabel("密码:");
+    passwordLabel = new JLabel("密码:");
     passwordLabel.setBounds(34, 166, 54, 15);
     passwordLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(passwordLabel);
@@ -144,7 +148,7 @@ public class SignIn {
           boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
           //判断用户名和密码是否和数据库中保存的一致
           if((comUser && comPwd) || (adminUser && adminPwd)) {
-            signInFrame.setVisible(false);
+            signInFrame.dispose();
             DataView.dataViewShow();
           }
           else
@@ -153,13 +157,15 @@ public class SignIn {
       }
     });
     passwordField.setText(commom.getPassword());
+    //passwordField.setFocusable(true);
+    //passwordField.setRequestFocusEnabled(true);
     passwordField.setColumns(10);
     passwordField.setEchoChar('*');
     passwordField.setBounds(34, 181, 362, 27);
     passwordField.setFont(new Font("等线", Font.BOLD, 14));
     signInFrame.getContentPane().add(passwordField);
     
-    JButton signInButt = new JButton("\u7528\u6237\u767B\u5F55");
+    signInButt = new JButton("\u7528\u6237\u767B\u5F55");
     signInButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
@@ -170,7 +176,7 @@ public class SignIn {
         boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
         //判断用户名和密码是否和数据库中保存的一致
         if((comUser && comPwd) || (adminUser && adminPwd)) {
-          signInFrame.setVisible(false);
+          signInFrame.dispose();
           DataView.dataViewShow();
         }
         else
@@ -183,14 +189,14 @@ public class SignIn {
     signInButt.setBackground(UIManager.getColor("Button.background"));
     signInFrame.getContentPane().add(signInButt);
     
-    JButton exitButt = new JButton("\u9000\u51FA\u7CFB\u7EDF");
+    exitButt = new JButton("\u9000\u51FA\u7CFB\u7EDF");
     exitButt.setForeground(UIManager.getColor("List.dropLineColor"));
     exitButt.setBounds(34, 229, 112, 40);
     exitButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        int num = JOptionPane.showConfirmDialog(null, "确认退出？", "提示", JOptionPane.YES_NO_OPTION);
-        if(num == JOptionPane.YES_OPTION)
+        //int num = JOptionPane.showConfirmDialog(null, "确认退出？", "提示", JOptionPane.YES_NO_OPTION);
+        //if(num == JOptionPane.YES_OPTION)
           System.exit(0);
       }
     });

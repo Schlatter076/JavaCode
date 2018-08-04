@@ -1,6 +1,7 @@
 package c211.client;
 
 import c211.db.*;
+import c211.serial.*;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -47,7 +48,7 @@ public class DataView {
   private JMenuItem mntmNewMenuItem_1;
   private JMenuItem menuItem;
   private JMenuItem mntmNewMenuItem_2;
-  private JMenuItem menuItem_1;
+  private JMenuItem testToolMenu;
   private JMenuItem menuItem_2;
   private JMenuItem menuItem_3;
   private JMenuItem menuItem_4;
@@ -259,9 +260,14 @@ public class DataView {
     mnNewMenu_1.setFont(new Font("黑体", Font.PLAIN, 14));
     menuBar.add(mnNewMenu_1);
     
-    menuItem_1 = new JMenuItem("测试工具");
-    menuItem_1.setFont(new Font("黑体", Font.PLAIN, 14));
-    mnNewMenu_1.add(menuItem_1);
+    testToolMenu = new JMenuItem("调试工具");
+    testToolMenu.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        SerialPortHelper.main(null);
+      }
+    });
+    testToolMenu.setFont(new Font("黑体", Font.PLAIN, 14));
+    mnNewMenu_1.add(testToolMenu);
     
     menuItem_2 = new JMenuItem("测试选项");
     menuItem_2.setFont(new Font("黑体", Font.PLAIN, 14));

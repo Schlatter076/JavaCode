@@ -1,0 +1,15 @@
+package c211.serialException;
+
+public class NoSuchPortException extends Exception {
+  
+  private static final long serialVersionUID = 1L;
+  
+  public NoSuchPortException() {}
+
+  @Override
+  public String toString() {
+    // TODO 自动生成的方法存根
+    return "没有找到与该端口名匹配的串口设备，打开串口操作失败！";
+  }
+  
+}

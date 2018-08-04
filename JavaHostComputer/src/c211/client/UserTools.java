@@ -12,8 +12,8 @@ public class UserTools {
    * @param xh
    * @return
    */
-  public static List<SerialPortHelper> getportnameByxuhao(int xh) {
-    List<SerialPortHelper> list = new ArrayList<SerialPortHelper>();
+  public static List<SerialPort> getportnameByxuhao(int xh) {
+    List<SerialPort> list = new ArrayList<SerialPort>();
     try {
       DBHelper db = new DBHelper();
       String sql = "select * from serialports where xuhao='" + xh + "'";
@@ -25,7 +25,7 @@ public class UserTools {
         String databits = res.getString(4);
         String stopbits = res.getString(5);
         String parity = res.getString(6);
-        list.add(new SerialPortHelper(xuhao, portname, baudrate, databits, stopbits, parity)); 
+        list.add(new SerialPort(xuhao, portname, baudrate, databits, stopbits, parity)); 
       }
     } catch(Exception e) {
       e.printStackTrace();
