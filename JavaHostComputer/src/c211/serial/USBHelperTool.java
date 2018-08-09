@@ -3,6 +3,7 @@ package c211.serial;
 import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
@@ -17,13 +18,33 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 
-public class SerialPortHelper {
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.ListSelectionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class USBHelperTool {
 
   private JFrame frame;
-  private JTextField textField;
   private JTextField orderField;
   private JTextField nameField;
+  private JButton viewButton;
+  private JList<Object> viewList;
+  private JLabel nameLabel;
+  private JButton openButt;
+  private JButton closeButt;
+  private JButton writeButt;
+  private JButton clearButt;
+  private JButton readButt;
+  private JButton checkButt;
+  
+  USBHelper usb = new USBHelper();
 
   /**
    * Launch the application.
@@ -32,7 +53,7 @@ public class SerialPortHelper {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
-          SerialPortHelper window = new SerialPortHelper();
+          USBHelperTool window = new USBHelperTool();
           window.frame.setVisible(true);
         } catch (Exception e) {
           e.printStackTrace();
@@ -44,7 +65,7 @@ public class SerialPortHelper {
   /**
    * Create the application.
    */
-  public SerialPortHelper() {
+  public USBHelperTool() {
     initialize();
   }
 
@@ -62,7 +83,7 @@ public class SerialPortHelper {
     
     //更换背景图片 
     ImageIcon img_1 = new ImageIcon("src/back.jpg"); 
-    JLabel imgLabel = new JLabel(img_1); //JLabel imgLabel = new JLabel(new ImageIcon("back.jpg"));
+    JLabel imgLabel = new JLabel(img_1);
     frame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE)); 
     imgLabel.setBounds(0,0,img_1.getIconWidth(), img_1.getIconHeight()); //背景图片的位置
     //将contentPane设置成透明的 
@@ -73,36 +94,86 @@ public class SerialPortHelper {
     frame.setIconImage(img);
     frame.getContentPane().setLayout(null);
     
-    JButton viewButton = new JButton("查看可用USB资源");
+    viewButton = new JButton("查看可用USB资源");
+    viewButton.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        Vector<String> vector = new Vector<>();
+        vector.add("USB0::0x1AB1::0x09C4::DM3R200200081::0::INSTR");
+        vector.add("USB0::0x1AB1::0x09C4::DM3R194802656::0::INSTR");
+        vector.add("USB0::0x1AB1::0x0E11::DP8G193900084::0::INSTR");
+        vector.add("TCPIP[board]::host address[::LAN device name][::INSTR]");
+        vector.add("TCPIP[board]::host address::port::SOCKET");
+        viewList.setListData(vector);
+        viewButton.setEnabled(false);
+        openButt.setEnabled(true);
+        closeButt.setEnabled(true);
+        
+      }
+    });
     viewButton.setBounds(466, 10, 196, 148);
     viewButton.setBackground(new Color(102, 205, 170));
     viewButton.setForeground(new Color(255, 0, 255));
     viewButton.setFont(new Font("微软雅黑", Font.PLAIN, 20));
     frame.getContentPane().add(viewButton);
     
-    textField = new JTextField();
-    textField.setToolTipText("");
-    textField.setFont(new Font("微软雅黑", Font.PLAIN, 40));
-    textField.setForeground(new Color(0, 255, 0));
-    textField.setHorizontalAlignment(SwingConstants.CENTER);
-    textField.setBounds(10, 10, 425, 148);
-    textField.setBackground(new Color(0, 0, 0));
-    frame.getContentPane().add(textField);
-    textField.setColumns(10);
+    viewList = new JList<>(); 
+    viewList.addListSelectionListener(new ListSelectionListener() {
+      public void valueChanged(ListSelectionEvent e) {
+        String str = viewList.getSelectedValue().toString();
+        nameField.setText(str);
+      }
+    });
+    viewList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    viewList.setValueIsAdjusting(true);
+    viewList.setForeground(new Color(0, 255, 0));
+    viewList.setFont(new Font("等线", Font.PLAIN, 15));
+    viewList.setBackground(Color.BLACK);
+    viewList.setBounds(10, 10, 431, 148);
+   
+    frame.getContentPane().add(viewList);
     
-    JLabel nameLabel = new JLabel("资源名称:");
+    nameLabel = new JLabel("资源名称:");
     nameLabel.setBounds(10, 168, 75, 15);
     nameLabel.setForeground(new Color(0, 250, 154));
     nameLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     frame.getContentPane().add(nameLabel);
     
-    JButton openButt = new JButton("打开USB接口");
+    openButt = new JButton("打开USB接口");
+    openButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        try {
+          USBHelper.setUpClass();
+        } catch(Exception ex) {
+          JOptionPane.showMessageDialog(null, "USB打开失败，请检查后重试！", "错误", JOptionPane.ERROR_MESSAGE);
+        }
+        usb.setLogFile();
+        usb.getVisaResourceManagerHandle();
+        usb.openInstrument(nameField.getText());
+        usb.setTimeout();
+        checkButt.setEnabled(true);
+        //readButt.setEnabled(true);
+        writeButt.setEnabled(true);
+        clearButt.setEnabled(true);
+        
+      }
+    });
+    openButt.setEnabled(false);
     openButt.setBounds(550, 225, 112, 36);
     openButt.setBackground(new Color(102, 205, 170));
     openButt.setFont(new Font("微软雅黑", Font.PLAIN, 12));
     frame.getContentPane().add(openButt);
     
-    JButton closeButt = new JButton("关闭USB接口");
+    closeButt = new JButton("关闭USB接口");
+    closeButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        usb.visaWrite("*RST");
+        usb.visaClear();
+      }
+    });
+    closeButt.setEnabled(false);
     closeButt.setBounds(428, 225, 112, 36);
     closeButt.setBackground(new Color(102, 205, 170));
     closeButt.setFont(new Font("微软雅黑", Font.PLAIN, 12));
@@ -118,14 +189,21 @@ public class SerialPortHelper {
     recieveField.setFont(new Font("微软雅黑", Font.PLAIN, 16));
     scrollPane.setViewportView(recieveField);
     
-    JButton clearButt = new JButton("清除");
+    clearButt = new JButton("清除");
+    clearButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        recieveField.setText("");
+      }
+    });
+    clearButt.setEnabled(false);
     clearButt.setBounds(556, 419, 106, 60);
     clearButt.setFont(new Font("微软雅黑", Font.PLAIN, 18));
     clearButt.setBackground(new Color(102, 205, 170));
     frame.getContentPane().add(clearButt);
     
     orderField = new JTextField();
-    orderField.setText("*IDN?\\n");
+    orderField.setText("*IDN?");
     orderField.setForeground(new Color(0, 0, 255));
     orderField.setHorizontalAlignment(SwingConstants.CENTER);
     orderField.setFont(new Font("微软雅黑", Font.PLAIN, 14));
@@ -139,19 +217,44 @@ public class SerialPortHelper {
     orderLabel.setBounds(10, 253, 109, 23);
     frame.getContentPane().add(orderLabel);
     
-    JButton writeButt = new JButton("写");
+    writeButt = new JButton("写");
+    writeButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        readButt.setEnabled(true);
+        usb.visaWrite(orderField.getText());
+      }
+    });
+    writeButt.setEnabled(false);
     writeButt.setBackground(new Color(102, 205, 170));
     writeButt.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     writeButt.setBounds(578, 317, 84, 36);
     frame.getContentPane().add(writeButt);
     
-    JButton readButt = new JButton("读");
+    readButt = new JButton("读");
+    readButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        //usb.visaWrite(nameField.getText());
+        recieveField.setText(usb.visaRead());
+      }
+    });
+    readButt.setEnabled(false);
     readButt.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     readButt.setBackground(new Color(102, 205, 170));
     readButt.setBounds(484, 317, 84, 36);
     frame.getContentPane().add(readButt);
     
-    JButton checkButt = new JButton("查询");
+    checkButt = new JButton("查询");
+    checkButt.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        if(orderField.getText().equals("*IDN?")) {
+          usb.visaWrite("*IDN?");
+          recieveField.setText(usb.visaRead());
+        }
+      }
+    });
+    checkButt.setEnabled(false);
     checkButt.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     checkButt.setBackground(new Color(102, 205, 170));
     checkButt.setBounds(390, 317, 84, 36);
@@ -172,6 +275,8 @@ public class SerialPortHelper {
     recieveLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     recieveLabel.setBounds(10, 341, 109, 23);
     frame.getContentPane().add(recieveLabel);
+    
+    
   }
   
 }

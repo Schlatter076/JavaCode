@@ -71,7 +71,7 @@ public class SignIn {
     signInFrame.setTitle("\u767B\u5F55");
     signInFrame.setBounds(100, 100, 438, 326);
     signInFrame.setResizable(false); //窗口大小不可更改
-    //signInFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); //点X不退出
+    signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
     
     Toolkit tk = Toolkit.getDefaultToolkit();
     Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
@@ -149,7 +149,9 @@ public class SignIn {
           //判断用户名和密码是否和数据库中保存的一致
           if((comUser && comPwd) || (adminUser && adminPwd)) {
             signInFrame.dispose();
-            DataView.dataViewShow();
+            //signInFrame.setVisible(false);
+            DataView.dataShow(idField.getEditor().getItem().toString());
+            //DataView.main(null);
           }
           else
             JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
@@ -177,7 +179,9 @@ public class SignIn {
         //判断用户名和密码是否和数据库中保存的一致
         if((comUser && comPwd) || (adminUser && adminPwd)) {
           signInFrame.dispose();
-          DataView.dataViewShow();
+          //signInFrame.setVisible(false);
+          DataView.dataShow(idField.getEditor().getItem().toString());
+          //DataView.main(null);
         }
         else
           JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);

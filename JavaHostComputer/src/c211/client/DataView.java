@@ -32,9 +32,11 @@ import java.util.Vector;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ScrollPaneConstants;
 
 public class DataView {
 
+  private String userName;
   private JFrame dataFrame;
   private JTextField txtC;
   private JPanel menuPanel;
@@ -63,12 +65,12 @@ public class DataView {
   private JTextField txtStop;
   private JScrollPane scrollPane;
   
-  //写一个静态方法供登录页面调用
-  public static void dataViewShow() {
+  
+  public static void dataShow(String user) {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
-          DataView window = new DataView();
+          DataView window = new DataView(user);
           window.dataFrame.setVisible(true);
         } catch (Exception e) {
           e.printStackTrace();
@@ -76,7 +78,6 @@ public class DataView {
       }
     });
   }
-  
   /**
    * Launch the application.
    */
@@ -93,10 +94,15 @@ public class DataView {
     });
   }
 
+  public DataView() {
+    initialize();
+  }
+
   /**
    * Create the application.
    */
-  public DataView() {
+  public DataView(String user) {
+    this.userName = user;
     initialize();
   }
 
@@ -263,7 +269,10 @@ public class DataView {
     testToolMenu = new JMenuItem("调试工具");
     testToolMenu.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        SerialPortHelper.main(null);
+        if(userName.equals("admin"))
+          USBHelperTool.main(null);
+        else
+          JOptionPane.showMessageDialog(null, "你没有权限操作", "警告", JOptionPane.WARNING_MESSAGE);
       }
     });
     testToolMenu.setFont(new Font("黑体", Font.PLAIN, 14));
