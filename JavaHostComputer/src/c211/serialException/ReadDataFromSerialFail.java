@@ -1,16 +1,15 @@
 package c211.serialException;
 
-public class SendDataToSerialFailException extends Exception {
+public class ReadDataFromSerialFail extends Exception {
   
   private static final long serialVersionUID = 1L;
   
-  public SendDataToSerialFailException() {}
+  public ReadDataFromSerialFail() {}
 
   @Override
   public String toString() {
     // TODO 自动生成的方法存根
-    return "往串口发送数据失败！";
+    return "从串口读取数据时出错！";
   }
-  
   
 }

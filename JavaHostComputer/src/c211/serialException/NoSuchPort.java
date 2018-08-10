@@ -1,10 +1,10 @@
 package c211.serialException;
 
-public class NoSuchPortException extends Exception {
+public class NoSuchPort extends Exception {
   
   private static final long serialVersionUID = 1L;
   
-  public NoSuchPortException() {}
+  public NoSuchPort() {}
 
   @Override
   public String toString() {

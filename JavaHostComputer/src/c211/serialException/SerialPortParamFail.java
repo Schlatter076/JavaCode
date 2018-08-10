@@ -1,12 +1,12 @@
 package c211.serialException;
 
-public class SerialPortParamFailException extends Exception {
+public class SerialPortParamFail extends Exception {
 
   /**
    * 
    */
   private static final long serialVersionUID = 1L;
-  public SerialPortParamFailException() {}
+  public SerialPortParamFail() {}
   
   @Override
   public String toString() {

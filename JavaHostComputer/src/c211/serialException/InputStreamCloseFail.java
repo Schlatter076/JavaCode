@@ -1,13 +1,13 @@
 package c211.serialException;
 
-public class InputStreamCloseFailException extends Exception {
+public class InputStreamCloseFail extends Exception {
 
   /**
    * 
    */
   private static final long serialVersionUID = 1L;
   
-  public InputStreamCloseFailException() {}
+  public InputStreamCloseFail() {}
 
   @Override
   public String toString() {

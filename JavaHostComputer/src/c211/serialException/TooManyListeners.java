@@ -1,10 +1,10 @@
 package c211.serialException;
 
-public class TooManyListenersException extends Exception {
+public class TooManyListeners extends Exception {
 
   private static final long serialVersionUID = 1L;
 
-  public TooManyListenersException() {}
+  public TooManyListeners() {}
 
   @Override
   public String toString() {
