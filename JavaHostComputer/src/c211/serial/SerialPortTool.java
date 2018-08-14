@@ -1,14 +1,18 @@
 package c211.serial;
 
-import java.io.BufferedWriter;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 import java.util.TooManyListenersException;
 
 import gnu.io.CommPort;
@@ -16,243 +20,242 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
 import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import gnu.io.UnsupportedCommOperationException;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
-import c211.serialException.*;
 
-public class SerialPortTool {
-  
+import c211.db.DBHelper;
+import c211.serialException.*;
+import c211.client.*;
+
+public class SerialPortTool implements SerialPortEventListener {
+
   private static SerialPortTool spTool = null;
+  DBHelper db = new DBHelper();
+  protected static BufferedReader reader;
+  protected static PrintWriter writer;
+  protected static SerialPort port;
+  AbstractReadCallback callback;
   
+  private static InputStream is;
+
   static {
-    //初始化时创建一个串口对象
-    if(spTool == null)
-      spTool = new SerialPortTool();  
+    // 初始化时创建一个串口对象
+    if (spTool == null)
+      spTool = new SerialPortTool();
   }
-  private SerialPortTool() {} //私有化构造器，不允许其他类创建
+  private SerialPortTool() {
+  } // 私有化构造器，不允许其他类创建
+
   /**
    * 获取串口工具对象
+   * 
    * @return 串口工具对象
    */
   public static SerialPortTool getSerialPortTool() {
-    if(spTool == null) {
+    if (spTool == null) {
       spTool = new SerialPortTool();
     }
-    return spTool;      
+    return spTool;
   }
   /**
    * 查找可用端口
+   * 
    * @return 可用端口名称列表
    */
   public static final ArrayList<String> findPort() {
-   
-    //获取当前所有可用串口
+
+    // 获取当前所有可用串口
     @SuppressWarnings("unchecked")
     Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
-    ArrayList<String> portNameList = new ArrayList<>(); //用来存储串口名
-    while(portList.hasMoreElements()) {
+    ArrayList<String> portNameList = new ArrayList<>(); // 用来存储串口名
+    while (portList.hasMoreElements()) {
       String portName = portList.nextElement().getName();
       portNameList.add(portName);
     }
     return portNameList;
-    
   }
   /**
-   *打开串口
-   * @param portName 端口名称
-   * @param parity 校验位(如:偶校验为"EVEN",无则为"NONE")
-   * @param baudrate 波特率
+   * 通过序号获取串口
+   * @param xuhao 1-->COM1, 2-->COM2
    * @return 串口对象
    * @throws SerialPortParamFail
    * @throws NotASerialPort
    * @throws NoSuchPort
    * @throws PortInUse
    */
-  public static final SerialPort openPort(String portName,String parity, int baudrate) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
+  public static SerialPort getPort(int xuhao) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
+    SerialPorts myPort = null;
+    List<SerialPorts> list = UserTools.getportnameByxuhao(xuhao);
+    for(Iterator<SerialPorts> it = list.iterator(); it.hasNext();) {
+      myPort = it.next();
+    }
     try {
-      //通过端口名识别端口
-      CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-      //打开端口，设置超时
-      CommPort commPort = portIdentifier.open(portName, 2000);
+      CommPortIdentifier comm = CommPortIdentifier.getPortIdentifier(myPort.getPortname()); //通过端口名识别端口
+      CommPort commPort = comm.open(myPort.getPortname(), 2000);  //打开端口，设置超时
       //如果是串口
       if(commPort instanceof SerialPort) {
-        SerialPort serialPort = (SerialPort) commPort;
+        port = (SerialPort) commPort;
         try {
-          //设置串口参数
-          if(parity.equals("EVEN")) {
-            serialPort.setSerialPortParams(baudrate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_EVEN);
-          }
-          else if(parity.equals("NONE")) {
-            serialPort.setSerialPortParams(baudrate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-          } 
+          port.setSerialPortParams(Integer.parseInt(myPort.getBaudrate()), Integer.parseInt(myPort.getDatabits()), 
+              Integer.parseInt(myPort.getStopbits()), Integer.parseInt(myPort.getParity()));
         } catch(UnsupportedCommOperationException e) {
           throw new SerialPortParamFail();
         }
-        return serialPort;
-      }
-      else {
-        //不是串口
-        throw new NotASerialPort();
-      }      
+        return port;
+      } else {
+        throw new NotASerialPort(); //不是串口
+      } 
     } catch(NoSuchPortException e) {
       throw new NoSuchPort();
     } catch(PortInUseException ex) {
       throw new PortInUse();
+    }  
+  }
+  /**
+   * 重载获取串口方法
+   * @param sPort 串口号
+   * @param baudRate 波特率
+   * @param dataBits 数据位
+   * @param stopBits 停止位
+   * @param parity 校验位(1->奇校验，2->偶校验，0->无校验)
+   * @return 当前串口
+   * @throws SerialPortParamFail
+   * @throws NotASerialPort
+   * @throws NoSuchPort
+   * @throws PortInUse
+   */
+  public static SerialPort getPort(String portName, int baudRate, int dataBits, 
+      int stopBits, int parity) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
+    
+    
+    try {
+      CommPortIdentifier comm = CommPortIdentifier.getPortIdentifier(portName); //通过端口名识别端口
+      CommPort commPort = comm.open(portName, 2000);  //打开端口，设置超时
+      //如果是串口
+      if(commPort instanceof SerialPort) {
+        port = (SerialPort) commPort;
+        try {
+          port.setSerialPortParams(baudRate, dataBits, stopBits, parity);
+        } catch(UnsupportedCommOperationException e) {
+          throw new SerialPortParamFail();
+        }
+        return port;
+      } else {
+        throw new NotASerialPort(); //不是串口
+      } 
+    } catch(NoSuchPortException e) {
+      throw new NoSuchPort();
+    } catch(PortInUseException ex) {
+      throw new PortInUse();
+    }  
+  }
+  /**
+   * 向串口发送数据
+   * @param command 待发送的命令
+   * @return 如果成功返回true
+   */
+  public static boolean write(SerialPort sPort, String command) {
+    SerialPort sp = sPort;
+    try {
+      writer = new PrintWriter(new OutputStreamWriter(sp.getOutputStream(), "UTF-8"), true);
+      writer.println(command);
+      return true;
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+      return false;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
     }
-  } 
+  }
+  /**
+   * 
+   * @param sPort
+   * @param callback
+   * @param charset
+   * @return
+   */
+  public SerialPortTool read(SerialPort sPort, AbstractReadCallback callback, Charset charset) {
+    try {
+      this.callback = callback;
+      reader = new BufferedReader(new InputStreamReader(sPort.getInputStream(), charset));
+      is = new BufferedInputStream(port.getInputStream());
+      sPort.addEventListener(this);
+      sPort.notifyOnDataAvailable(true);
+      return this;
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (TooManyListenersException e) {
+      e.printStackTrace();
+    }
+    return this;
+  }
+  
+  @Override
+  public void serialEvent(SerialPortEvent event) {
+    switch (event.getEventType()) {
+    case SerialPortEvent.BI:
+    case SerialPortEvent.OE:
+    case SerialPortEvent.FE:
+    case SerialPortEvent.PE:
+    case SerialPortEvent.CD:
+    case SerialPortEvent.CTS:
+    case SerialPortEvent.DSR:
+    case SerialPortEvent.RI:
+    case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+      callback.onError(event);
+      break;
+    case SerialPortEvent.DATA_AVAILABLE:
+      synchronized (reader) {
+        // 数据到达，回调
+        callback.call(reader, is);
+      }
+    }
+  }
   /**
    * 关闭串口
-   * @param serialPort
+   * @param serialPort  串口对象
    */
   public static void closePort(SerialPort serialPort) {
-    if(serialPort != null) {
+    if (serialPort != null) {
       serialPort.close();
       serialPort = null;
     }
   }
   /**
-   * 将字符串转换成字节数组
-   * @param str
-   * @return
-   */
-  public static byte[] hexStrToByteArray(String str) {
-    BASE64Decoder dec = new BASE64Decoder();
-    byte[] after = null;
-    try {
-      after = dec.decodeBuffer(str);// 使用BASE64解码
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return after;
-  }
-  
-  public static String byteArrayToString(byte[] bytes) {
-    BASE64Encoder enc=new BASE64Encoder();
-    String mes=enc.encodeBuffer(bytes); //使用BASE64编码
-    return mes;
-  }
-  /**
-   * 发送命令到串口
-   * @param serialPort 串口名
-   * @param order 命令
+   * 测试本类方法
+   * @param args
+   * @throws SerialPortParamFail
+   * @throws NotASerialPort
+   * @throws NoSuchPort
+   * @throws PortInUse
    * @throws SendToPortFail
    * @throws OutputStreamCloseFail
-   */
-  public static void sendToPort(SerialPort serialPort, String order) throws SendToPortFail, OutputStreamCloseFail {
-    /*byte[] orders = null;
-    try {
-      orders = order.getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e1) {
-      // TODO 自动生成的 catch 块
-      e1.printStackTrace();
-    }
-    OutputStream out = null;*/
-    //char[] chOder = order.toCharArray();
-    OutputStream out = null;
-    BufferedWriter bw = null;
-    try {
-      out = serialPort.getOutputStream();
-      bw = new BufferedWriter(new OutputStreamWriter(out));
-      bw.write(order);
-      out.flush();
-      bw.flush();
-    } catch(IOException e) {
-      throw new SendToPortFail();
-    } finally {
-      try {
-        if(out != null) {
-          out.close();
-          out = null;
-        }
-        else if(bw != null) {
-          bw.close();
-          bw = null;
-        }
-      } catch(IOException e) {
-        throw new OutputStreamCloseFail();
-      }
-    }  
-  }
-  /**
-   * 从串口读取数据
-   * @param serialPort
-   * @return 字节数组(存放读取到的数据)
    * @throws ReadDataFromSerialFail
-   * @throws OutputStreamCloseFail
+   * @throws c211.serialException.TooManyListeners 
    */
-  public static byte[] readFromPort(SerialPort serialPort) throws ReadDataFromSerialFail, OutputStreamCloseFail {
-    InputStream in = null;
-    byte[] bytes = null;
-    try {
-      in = serialPort.getInputStream();
-      int buffLenth = in.available(); //获取buffer中的数据长度
-      while(buffLenth != 0) {
-        bytes = new byte[buffLenth];   //根据buffer中的数据长度创建数组用来存储数据
-        in.read(bytes);
-        buffLenth = in.available();
-      }      
-    } catch(IOException e) {
-      throw new ReadDataFromSerialFail();
-    } finally {
-      try {
-        if(in != null) {
-          in.close();
-          in = null;
-        }
-      } catch(IOException e) {
-        throw new OutputStreamCloseFail();
-      }
-    }
-    return bytes;
-  }
-  
-  public static void addListener(SerialPort serialPort, SerialPortEventListener listener) throws TooManyListeners {
-    try {
-      //给串口添加监听器
-      serialPort.addEventListener(listener);
-      //设置当数据到达时唤醒监听接收线程
-      serialPort.notifyOnDataAvailable(true);
-      //通信中断时唤醒中断线程
-      serialPort.notifyOnBreakInterrupt(true);
-    } catch(TooManyListenersException e) {
-      throw new TooManyListeners();
-    }
-  }
-  public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse, SendToPortFail, OutputStreamCloseFail, ReadDataFromSerialFail {
-   /* ArrayList<String> port = findPort();
-    for(Iterator<String> i = port.iterator(); i.hasNext(); ) {
+  public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse,
+      SendToPortFail, OutputStreamCloseFail, ReadDataFromSerialFail, c211.serialException.TooManyListeners {
+    
+    System.out.println(SerialPortEvent.DATA_AVAILABLE);
+    ArrayList<String> port = findPort();
+    for (Iterator<String> i = port.iterator(); i.hasNext();) {
       String s = i.next();
       System.out.println(s);
     }
-    SerialPort COM1 = openPort("COM1", "NONE", 9600);*/
-    /*
-    byte[] bytes = {0x2A, 0x52, 0x53, 0x54, 0x0D, 0x0A, 0x63, 0x6D, 
-        0x64, 0x73, 0x65, 0x74, 0x20, 0x72, 0x69, 0x67, 
-        0x6F, 0x6C, 0x0D, 0x0A, 0x3A, 0x46, 0x55, 0x4E, 
-        0x43, 0x74, 0x69, 0x6F, 0x6E, 0x3A, 0x43, 0x4C, 
-        0x45, 0x41, 0x52, 0x0D, 0x0A, 0x3A, 0x66, 0x75, 
-        0x6E, 0x63, 0x74, 0x69, 0x6F, 0x6E, 0x3A, 0x43, 
-        0x55, 0x52, 0x52, 0x45, 0x4E, 0x54, 0x3A, 0x44, 
-        0x43, 0x0D, 0x0A, 0x3A, 0x6D, 0x65, 0x61, 0x73, 
-        0x75, 0x72, 0x65, 0x3A, 0x43, 0x55, 0x52, 0x52, 
-        0x45, 0x4E, 0x54, 0x3A, 0x44, 0x43, 0x3F, 0x0D, 
-        0x0A, 0x3A, 0x63, 0x61, 0x6C, 0x63, 0x75, 0x6C, 
-        0x61, 0x74, 0x65, 0x3A, 0x66, 0x75, 0x6E, 0x63, 
-        0x74, 0x69, 0x6F, 0x6E, 0x20, 0x6E, 0x6F, 0x6E, 0x65}; */
-    //String order = ":measure:voltage:DC?";
-    byte[] b = hexStrToByteArray(":measure:voltage:DC?");
-    for(byte by: b)
-      System.out.println(by);
-    System.out.println(byteArrayToString(b));
-    /*sendToPort(COM1, "*RST");
-    sendToPort(COM1, "cmdset rigol");
-    sendToPort(COM1, ":FUNCtion:CLEAR");
-    sendToPort(COM1, ":function:voltage:DC");
-    sendToPort(COM1, ":measure:voltage:DC?");
-    sendToPort(COM1, ":calculate:function none");
-    System.out.println(readFromPort(COM1));*/
+    SerialPort COM1 = getPort("COM1", 9600, 8, 1, 0);
+    //SerialPort COM1 = getPort(1);  /*openPort("COM1", "EVEN", 9600);*/
+    System.out.println("波特率：" + COM1.getBaudRate());
+    System.out.println("校验位：" + COM1.getParity());
+    write(COM1, ":function:voltage:DC");
+    write(COM1, ":measure:voltage:DC?");
+    CallBack cb = new CallBack();
+    new SerialPortTool().read(COM1, cb, Charset.forName("UTF-8"));
+    System.out.println(cb.getResult());  //获取值
+    closePort(COM1);
   }
-  
+
 }

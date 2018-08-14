@@ -121,9 +121,7 @@ public class DataView {
     dataFrame.setUndecorated(true);
     
     //更换背景图片 
-    //ImageIcon img_1 = new ImageIcon("src/ground.jpg");
-    ImageIcon img_1 = new ImageIcon("src/run.jpg"); 
-    //ImageIcon img_1 = new ImageIcon("src/back.jpg"); 
+    ImageIcon img_1 = new ImageIcon("src/run.jpg");  
     JLabel imgLabel = new JLabel(img_1); //JLabel imgLabel = new JLabel(new ImageIcon("back.jpg"));
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE)); 
     imgLabel.setBounds(0,0,img_1.getIconWidth(), img_1.getIconHeight()); //背景图片的位置

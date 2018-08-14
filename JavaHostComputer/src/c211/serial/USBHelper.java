@@ -33,7 +33,11 @@ public class USBHelper {
   static final String LOG_PATH = "log/c211log.txt";
   
   static File logFile; 
-  
+  /**
+   * 测试用方法
+   * @param args
+   * @throws Exception
+   */
   public static void main(String[] args) throws Exception {
     setUpClass();
     USBHelper me = new USBHelper();
@@ -47,11 +51,18 @@ public class USBHelper {
     me.visaClear();
     
   }
+  /**
+   * 获取默认资源
+   * @throws Exception
+   */
   public static void setUpClass() throws Exception{
     instance = new JVisa();
     assertEquals(instance.openDefaultResourceManager(), VisatypeLibrary.VI_SUCCESS);
     logFile = new File(LOG_PATH);
   }
+  /**
+   * 设置日志文件
+   */
   public void setLogFile() {
     if(logFile.exists()) {
       logFile.delete();
@@ -60,10 +71,17 @@ public class USBHelper {
     JVisa.logFileHandler.setFormatter(new SimpleFormatter());
     JVisa.LOGGER.setLevel(Level.FINE);
   }
+  /**
+   * 获取visa资源处理
+   */
   public void getVisaResourceManagerHandle() {
     viSession = instance.getResourceManagerHandle();
     assertTrue(viSession > 0L, String.format("Resource manager handle is 0x%08X", viSession));
   }
+  /**
+   * 通过资源名称打开仪器连接
+   * @param instrument 资源名称
+   */
   public void openInstrument(String instrument) {
     try {
       long expResult = VisatypeLibrary.VI_SUCCESS;
@@ -76,6 +94,9 @@ public class USBHelper {
     }
     
   }
+  /**
+   *清除资源
+   */
   public void visaClear() {
     try {
       long expResult = 0L;
@@ -84,6 +105,9 @@ public class USBHelper {
       LOGGER.log(Level.SEVERE, null, e);
     }
   }
+  /**
+   * 设置超时
+   */
   public void setTimeout() {
     JVisaReturnNumber timeoutReturn = new JVisaReturnNumber((int) 0);
     int timeoutOriginal, timeoutNew = 5123;
@@ -104,9 +128,16 @@ public class USBHelper {
     result = instance.setAttribute(VisaLibrary.VI_ATTR_TMO_VALUE, timeoutOriginal, viInstrument);
     assertEquals(result, expResult);
   }
+  /**
+   * 获取资源处理
+   */
   public void getVisaInstrumentHandle() {
     assertTrue(instance.getVisaInstrumentHandle() > 0L);
   }
+  /**
+   * 发送指令
+   * @param command  指令
+   */
   public void visaWrite(String command) {
     long expResult = VisatypeLibrary.VI_SUCCESS;
     try {
@@ -115,6 +146,10 @@ public class USBHelper {
       LOGGER.log(Level.SEVERE, null, e);
     }
   }
+  /**
+   * 读取缓冲区的值
+   * @return
+   */
   public String visaRead() {
     try {
       JVisaReturnString response = new JVisaReturnString();

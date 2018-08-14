@@ -1,7 +1,7 @@
 package c211.serial;
 
 
-public class SerialPort {
+public class SerialPorts {
   private int xuhao;
   private String portname;
   private String baudrate;
@@ -12,8 +12,8 @@ public class SerialPort {
   /**
    * 构造器
    */
-  public SerialPort() {}
-  public SerialPort(int xuhao, String portname, String baudrate, String databits, String stopbits, String parity) {
+  public SerialPorts() {}
+  public SerialPorts(int xuhao, String portname, String baudrate, String databits, String stopbits, String parity) {
     this.xuhao = xuhao;
     this.portname = portname;
     this.baudrate = baudrate;
