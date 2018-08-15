@@ -27,7 +27,7 @@ public class RecordOneDayTools {
    * 清除recordtdoneday表
    * @return
    */
-  public int truncateRecordoneday() throws Exception {
+  public static int truncateRecordoneday() throws Exception {
     String sql = "truncate table recordtdoneday";
     return new DBHelper().AddU(sql, null);
   }
@@ -38,7 +38,7 @@ public class RecordOneDayTools {
    * @return
    * @throws Exception
    */
-  public int recordonedayInsert(String str[]) throws Exception{
+  public static int recordonedayInsert(String str[]) throws Exception{
     String sql = "insert into recordtdoneday values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     return new DBHelper().AddU(sql, str);
   }
@@ -75,7 +75,7 @@ public class RecordOneDayTools {
   /**
    * 导出到excel
    */
-  public void outFile() {
+  public static void outFile() {
     try {
       WritableWorkbook wwb = null;
       //创建可写入的Excel工作簿

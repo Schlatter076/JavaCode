@@ -33,6 +33,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.JButton;
 
 public class DataView {
 
@@ -64,6 +65,8 @@ public class DataView {
   private JLabel label_2;
   private JTextField txtStop;
   private JScrollPane scrollPane;
+  private JButton COM7Butt;
+  private JButton COM8Butt;
   
   
   public static void dataShow(String user) {
@@ -113,16 +116,19 @@ public class DataView {
     dataFrame = new JFrame();
     //dataFrame.getContentPane().setBackground(new Color(245, 245, 220));
     //自动获取屏幕分辨率
-    Dimension viewSize = Toolkit.getDefaultToolkit().getScreenSize();
-    dataFrame.setBounds(0, 0, viewSize.width, viewSize.height);
+    //Dimension viewSize = Toolkit.getDefaultToolkit().getScreenSize();
+    final int WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width;
+    final int HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().height;
+    dataFrame.setBounds(0, 0, WIDTH, HEIGHT);
     dataFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     
     dataFrame.setResizable(false);  //窗口大小不可改
     dataFrame.setUndecorated(true);
     
     //更换背景图片 
-    ImageIcon img_1 = new ImageIcon("src/run.jpg");  
-    JLabel imgLabel = new JLabel(img_1); //JLabel imgLabel = new JLabel(new ImageIcon("back.jpg"));
+    //ImageIcon img_1 = new ImageIcon("src/run.jpg");
+    ImageIcon img_1 = new ImageIcon("src/water.png");
+    JLabel imgLabel = new JLabel(img_1);
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE)); 
     imgLabel.setBounds(0,0,img_1.getIconWidth(), img_1.getIconHeight()); //背景图片的位置
     //将contentPane设置成透明的 
@@ -138,17 +144,17 @@ public class DataView {
     
     txtC = new JTextField();
     txtC.setEditable(false);
-    txtC.setBounds(0, 0, 1600, 63);
+    txtC.setBounds(0, 0, WIDTH, HEIGHT/9 - 5);
     txtC.setText("C211测试系统");
     txtC.setHorizontalAlignment(SwingConstants.CENTER);
     txtC.setForeground(new Color(255, 20, 147));
-    txtC.setFont(new Font("等线", Font.BOLD, 45));
+    txtC.setFont(new Font("等线", Font.BOLD, 50));
     txtC.setBackground(new Color(0, 204, 255));
     dataFrame.getContentPane().add(txtC);
     txtC.setColumns(10);
     
     JPanel resultPanel = new JPanel();
-    resultPanel.setBounds(0, 75, 1000, 112);
+    resultPanel.setBounds(0, HEIGHT/9, WIDTH*10/16, HEIGHT*9/72);
     resultPanel.setBackground(new Color(211, 211, 211));
     dataFrame.getContentPane().add(resultPanel);
     resultPanel.setLayout(null);
@@ -198,31 +204,31 @@ public class DataView {
     resultPanel.add(textField_4);
     
     lblNewLabel = new JLabel("测试总数：");
-    lblNewLabel.setFont(new Font("等线", Font.BOLD, 20));
+    lblNewLabel.setFont(new Font("等线", Font.BOLD, 16));
     lblNewLabel.setForeground(new Color(50, 205, 50));
     lblNewLabel.setBounds(60, 10, 110, 25);
     resultPanel.add(lblNewLabel);
     
     lblOk = new JLabel("OK：");
     lblOk.setForeground(new Color(50, 205, 50));
-    lblOk.setFont(new Font("等线", Font.BOLD, 20));
+    lblOk.setFont(new Font("等线", Font.BOLD, 16));
     lblOk.setBounds(300, 10, 99, 25);
     resultPanel.add(lblOk);
     
     lblNg = new JLabel("NG：");
     lblNg.setForeground(new Color(255, 0, 0));
-    lblNg.setFont(new Font("等线", Font.BOLD, 20));
+    lblNg.setFont(new Font("等线", Font.BOLD, 16));
     lblNg.setBounds(540, 10, 99, 25);
     resultPanel.add(lblNg);
     
     label_2 = new JLabel("测试时间：");
     label_2.setForeground(new Color(50, 205, 50));
-    label_2.setFont(new Font("等线", Font.BOLD, 20));
+    label_2.setFont(new Font("等线", Font.BOLD, 16));
     label_2.setBounds(770, 10, 122, 25);
     resultPanel.add(label_2);
     
     menuPanel = new JPanel();
-    menuPanel.setBounds(1200, 75, 400, 815);
+    menuPanel.setBounds(WIDTH*12/16 + 10, HEIGHT/9, WIDTH*4/16, HEIGHT*8/9 - 5);
     menuPanel.setBackground(new Color(216, 191, 216));
     dataFrame.getContentPane().add(menuPanel);
     menuPanel.setLayout(null);
@@ -309,7 +315,7 @@ public class DataView {
     mnNewMenu_2.add(menuItem_6);
     
     runPanel = new JPanel();
-    runPanel.setBounds(1005, 75, 185, 685);
+    runPanel.setBounds(WIDTH*10/16 + 5, HEIGHT/9, WIDTH*2/16, HEIGHT*51/72+5);
     runPanel.setBackground(new Color(255, 255, 255));
     runPanel.setOpaque(false);
     dataFrame.getContentPane().add(runPanel);
@@ -320,22 +326,62 @@ public class DataView {
     txtStop.setText("STOP");
     txtStop.setHorizontalAlignment(SwingConstants.CENTER);
     txtStop.setFont(new Font("等线", Font.BOLD, 70));
-    txtStop.setBounds(0, 0, 185, 113);
+    txtStop.setBounds(0, 0, WIDTH*2/16, HEIGHT*9/72);
     txtStop.setBackground(new Color(255, 255, 0));
     runPanel.add(txtStop);
     txtStop.setColumns(10);
     
     serialPanel = new JPanel();
-    serialPanel.setBounds(0, 770, 1190, 120);
+    serialPanel.setBounds(0, HEIGHT*60/72, WIDTH*12/16 + 5, HEIGHT*12/72-5);
     serialPanel.setBackground(new Color(255, 228, 225));
     dataFrame.getContentPane().add(serialPanel);
     serialPanel.setLayout(null);
     
+    JButton COM1Butt = new JButton("COM1");
+    COM1Butt.setBackground(new Color(255, 228, 225));
+    COM1Butt.setBounds(24, 10, 93, 23);
+    serialPanel.add(COM1Butt);
+    
+    JButton COM2Butt = new JButton("COM2");
+    COM2Butt.setBackground(new Color(255, 228, 225));
+    COM2Butt.setBounds(161, 10, 93, 23);
+    serialPanel.add(COM2Butt);
+    
+    JButton COM3Butt = new JButton("COM3");
+    COM3Butt.setBackground(new Color(255, 228, 225));
+    COM3Butt.setBounds(299, 10, 93, 23);
+    serialPanel.add(COM3Butt);
+    
+    JButton COM4Butt = new JButton("COM4");
+    COM4Butt.setBackground(new Color(255, 228, 225));
+    COM4Butt.setBounds(434, 10, 93, 23);
+    serialPanel.add(COM4Butt);
+    
+    JButton COM5Butt = new JButton("COM5");
+    COM5Butt.setBackground(new Color(255, 228, 225));
+    COM5Butt.setBounds(568, 10, 93, 23);
+    serialPanel.add(COM5Butt);
+    
+    JButton COM6Butt = new JButton("COM6");
+    COM6Butt.setBackground(new Color(255, 228, 225));
+    COM6Butt.setBounds(691, 10, 93, 23);
+    serialPanel.add(COM6Butt);
+    
+    COM7Butt = new JButton("COM7");
+    COM7Butt.setBackground(new Color(255, 228, 225));
+    COM7Butt.setBounds(819, 10, 93, 23);
+    serialPanel.add(COM7Butt);
+    
+    COM8Butt = new JButton("COM8");
+    COM8Butt.setBackground(new Color(255, 228, 225));
+    COM8Butt.setBounds(938, 10, 93, 23);
+    serialPanel.add(COM8Butt);
+   
     //JTable table = new JTable(17, 10);  
     //table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见 
     
     scrollPane = new JScrollPane(completedTable(getTestTable()));  //向滚动面板中添加JTable
-    scrollPane.setBounds(15, 197, viewSize.width*5/8 - 15, viewSize.height*5/8);
+    scrollPane.setBounds(10, HEIGHT*17/72+5, WIDTH*10/16 - 10, HEIGHT*42/72);
     dataFrame.getContentPane().add(scrollPane);
     
   }
@@ -402,11 +448,13 @@ public class DataView {
     TableColumn colMaxvalue = table.getColumnModel().getColumn(3);
     TableColumn colMinvalue = table.getColumnModel().getColumn(4);
     TableColumn colTestvalue = table.getColumnModel().getColumn(5);
+    TableColumn colTestResult = table.getColumnModel().getColumn(7);
     colNull.setPreferredWidth(20);
     colTestitem.setPreferredWidth(150);
     colMaxvalue.setPreferredWidth(100);
     colMinvalue.setPreferredWidth(100);
     colTestvalue.setPreferredWidth(100);
+    colTestResult.setPreferredWidth(100);
     //colTestvalue.setMaxWidth(100);
     //colTestvalue.setMinWidth(100);
 
@@ -425,5 +473,4 @@ public class DataView {
     table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整
     return table;
   }
-  
 }

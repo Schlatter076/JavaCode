@@ -19,7 +19,7 @@ public class C211DataTools {
    * @return
    * @throws Exception
    */
-  public int c211Insert(String str[]) throws Exception{
+  public static int c211Insert(String str[]) throws Exception{
     String sql = "insert into c211 values(?, ?, ?, ?, ?, ?, ?)";
     return new DBHelper().AddU(sql, str);
   }

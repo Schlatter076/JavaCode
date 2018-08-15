@@ -46,7 +46,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int deleteBetteryData(String Bd) throws Exception {
+  public static int deleteBetteryData(String Bd) throws Exception {
     String sql = "delete from testsystem where buzhou = '" + Bd + "'";
     return new DBHelper().AddU(sql, null);
   }
@@ -57,7 +57,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int deleteTwoBetteryData(String Bd1, String Bd2) throws Exception {
+  public static int deleteTwoBetteryData(String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where buzhou = '" + Bd1 + "'" + "and date='" + Bd2 + "'";
     return new DBHelper().AddU(sql, null);
   }
@@ -69,7 +69,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int deleteTwoBetteryData01(String Bdata, String Bd1, String Bd2) throws Exception {
+  public static int deleteTwoBetteryData01(String Bdata, String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where date = '" + Bdata + "'" + "and buzhou Between'" + Bd1 + "'" + "and'" + Bd2 + "'";
     return new DBHelper().AddU(sql, null);
   }
@@ -80,7 +80,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int AreaDeleteBetteryData(String Bd1, String Bd2) throws Exception {
+  public static int AreaDeleteBetteryData(String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where buzhou Between'" + Bd1 + "'" + "and'" + Bd2 + "'";
     return new DBHelper().AddU(sql, null);
   }
@@ -120,7 +120,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int deleterecord(String recordtime, String recordname) throws Exception {
+  public static int deleterecord(String recordtime, String recordname) throws Exception {
     String sql = "delete  from recordtd where recordtime='" + recordtime + "' and recordname='" + recordname + "'";
     return new DBHelper().AddU(sql, null);
   }
@@ -132,7 +132,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int addrecord(String str[]) throws Exception{
+  public static int addrecord(String str[]) throws Exception{
     String sql = "insert into recordtd(recordname,recordsum,recordok,recordng,recordts,recordtime) values(?, ?, ?, ?, ?, ?)";
     return new DBHelper().AddU(sql, str);
   }
@@ -142,7 +142,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int addProductsName(String productname) throws Exception {
+  public static int addProductsName(String productname) throws Exception {
     String sql = "insert into producttypes(productname) values('" + productname + "')";
     return new DBHelper().AddU(sql, null);
   }
@@ -152,7 +152,7 @@ public class ECTESTSYSTools {
    * @return
    * @throws Exception
    */
-  public int deleteProductsName(String ductsName) throws Exception {
+  public static int deleteProductsName(String ductsName) throws Exception {
     String sql = "delete from producttypes where productname='" + ductsName + "'";
     return new DBHelper().AddU(sql, null);
   }

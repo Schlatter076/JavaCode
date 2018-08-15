@@ -37,7 +37,7 @@ public class UserTools {
    * @param name
    * @return
    */
-  public User getUserByName(String name) {
+  public static User getUserByName(String name) {
     User usr = new User();
     try {
       DBHelper db = new DBHelper();
@@ -61,7 +61,7 @@ public class UserTools {
    * @return
    * @throws Exception
    */
-  public int updateUser(String user_name, String password) throws Exception {
+  public static int updateUser(String user_name, String password) throws Exception {
     String sql = "update [dbo].[user] set password='" + password + "' where user_name='" + user_name + "' ";
     return new DBHelper().AddU(sql, null);
   }

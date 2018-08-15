@@ -34,9 +34,8 @@ public class SerialPortTool implements SerialPortEventListener {
   DBHelper db = new DBHelper();
   protected static BufferedReader reader;
   protected static PrintWriter writer;
-  protected static SerialPort port;
-  AbstractReadCallback callback;
-  
+  //protected static SerialPort port;
+  private AbstractReadCallback callback;
   private static InputStream is;
 
   static {
@@ -44,9 +43,8 @@ public class SerialPortTool implements SerialPortEventListener {
     if (spTool == null)
       spTool = new SerialPortTool();
   }
-  private SerialPortTool() {
-  } // 私有化构造器，不允许其他类创建
-
+  
+  private SerialPortTool() {}  //不允许其他类创建该类对象
   /**
    * 获取串口工具对象
    * 
@@ -95,7 +93,7 @@ public class SerialPortTool implements SerialPortEventListener {
       CommPort commPort = comm.open(myPort.getPortname(), 2000);  //打开端口，设置超时
       //如果是串口
       if(commPort instanceof SerialPort) {
-        port = (SerialPort) commPort;
+        SerialPort port = (SerialPort) commPort;
         try {
           port.setSerialPortParams(Integer.parseInt(myPort.getBaudrate()), Integer.parseInt(myPort.getDatabits()), 
               Integer.parseInt(myPort.getStopbits()), Integer.parseInt(myPort.getParity()));
@@ -134,7 +132,7 @@ public class SerialPortTool implements SerialPortEventListener {
       CommPort commPort = comm.open(portName, 2000);  //打开端口，设置超时
       //如果是串口
       if(commPort instanceof SerialPort) {
-        port = (SerialPort) commPort;
+        SerialPort port = (SerialPort) commPort;
         try {
           port.setSerialPortParams(baudRate, dataBits, stopBits, parity);
         } catch(UnsupportedCommOperationException e) {
@@ -170,17 +168,18 @@ public class SerialPortTool implements SerialPortEventListener {
     }
   }
   /**
-   * 
+   * 从串口接收
    * @param sPort
    * @param callback
    * @param charset
-   * @return
+   * @return 串口工具对象
    */
-  public SerialPortTool read(SerialPort sPort, AbstractReadCallback callback, Charset charset) {
+  public  SerialPortTool read(SerialPort sPort, AbstractReadCallback callback, Charset charset) {
     try {
+      //AbstractReadCallback cb = callback;
       this.callback = callback;
       reader = new BufferedReader(new InputStreamReader(sPort.getInputStream(), charset));
-      is = new BufferedInputStream(port.getInputStream());
+      is = new BufferedInputStream(sPort.getInputStream());
       sPort.addEventListener(this);
       sPort.notifyOnDataAvailable(true);
       return this;
@@ -192,6 +191,16 @@ public class SerialPortTool implements SerialPortEventListener {
       e.printStackTrace();
     }
     return this;
+  }
+  /**
+   * 重载从串口接收方法
+   * @param sPort
+   * @return 获取到的值(String类型)
+   */
+  public static String read(SerialPort sPort) {
+    CallBack cback = new CallBack();
+    getSerialPortTool().read(sPort, cback, Charset.forName("UTF-8"));
+    return cback.getResult();
   }
   
   @Override
@@ -225,37 +234,4 @@ public class SerialPortTool implements SerialPortEventListener {
       serialPort = null;
     }
   }
-  /**
-   * 测试本类方法
-   * @param args
-   * @throws SerialPortParamFail
-   * @throws NotASerialPort
-   * @throws NoSuchPort
-   * @throws PortInUse
-   * @throws SendToPortFail
-   * @throws OutputStreamCloseFail
-   * @throws ReadDataFromSerialFail
-   * @throws c211.serialException.TooManyListeners 
-   */
-  public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse,
-      SendToPortFail, OutputStreamCloseFail, ReadDataFromSerialFail, c211.serialException.TooManyListeners {
-    
-    System.out.println(SerialPortEvent.DATA_AVAILABLE);
-    ArrayList<String> port = findPort();
-    for (Iterator<String> i = port.iterator(); i.hasNext();) {
-      String s = i.next();
-      System.out.println(s);
-    }
-    SerialPort COM1 = getPort("COM1", 9600, 8, 1, 0);
-    //SerialPort COM1 = getPort(1);  /*openPort("COM1", "EVEN", 9600);*/
-    System.out.println("波特率：" + COM1.getBaudRate());
-    System.out.println("校验位：" + COM1.getParity());
-    write(COM1, ":function:voltage:DC");
-    write(COM1, ":measure:voltage:DC?");
-    CallBack cb = new CallBack();
-    new SerialPortTool().read(COM1, cb, Charset.forName("UTF-8"));
-    System.out.println(cb.getResult());  //获取值
-    closePort(COM1);
-  }
-
 }

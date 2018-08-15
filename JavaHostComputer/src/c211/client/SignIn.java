@@ -112,8 +112,8 @@ public class SignIn {
     
   //获取用户名和密码
     passwordField = new JPasswordField();  //新建密码区域
-    commom = new UserTools().getUserByName("commom");
-    admin = new UserTools().getUserByName("admin");
+    commom = UserTools.getUserByName("commom");
+    admin = UserTools.getUserByName("admin");
     idField = new JComboBox<String>();
     idField.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
