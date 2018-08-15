@@ -34,6 +34,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JButton;
+import javax.swing.JProgressBar;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class DataView {
 
@@ -67,6 +70,7 @@ public class DataView {
   private JScrollPane scrollPane;
   private JButton COM7Butt;
   private JButton COM8Butt;
+  private JButton testButt;
   
   
   public static void dataShow(String user) {
@@ -315,6 +319,7 @@ public class DataView {
     mnNewMenu_2.add(menuItem_6);
     
     runPanel = new JPanel();
+    runPanel.setForeground(new Color(0, 204, 0));
     runPanel.setBounds(WIDTH*10/16 + 5, HEIGHT/9, WIDTH*2/16, HEIGHT*51/72+5);
     runPanel.setBackground(new Color(255, 255, 255));
     runPanel.setOpaque(false);
@@ -330,6 +335,40 @@ public class DataView {
     txtStop.setBackground(new Color(255, 255, 0));
     runPanel.add(txtStop);
     txtStop.setColumns(10);
+    
+    JProgressBar progressBar = new JProgressBar();
+    progressBar.setForeground(new Color(0, 204, 51));
+    progressBar.setStringPainted(true);
+    progressBar.setBounds(0, HEIGHT*9/72 + 5, WIDTH*2/16, HEIGHT*2/72);
+    runPanel.add(progressBar);
+    
+    testButt = new JButton("点我");
+    testButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        //progressBar.setString("%");
+        txtStop.setText("RUN");
+        new Thread(){
+          public void run(){
+            for(int i=0;i<=100;i++){
+              try{
+                Thread.sleep(100);
+              }catch(InterruptedException e){
+                e.printStackTrace();
+              }
+                  progressBar.setValue(i);
+            }
+            //progressBar.setString("OVER");
+            txtStop.setText("STOP");
+          }
+        }.start();
+      }
+    });
+    
+    testButt.setForeground(new Color(102, 0, 0));
+    testButt.setBackground(new Color(153, 255, 255));
+    testButt.setBounds(49, 171, 93, 23);
+    runPanel.add(testButt);
     
     serialPanel = new JPanel();
     serialPanel.setBounds(0, HEIGHT*60/72, WIDTH*12/16 + 5, HEIGHT*12/72-5);
@@ -379,7 +418,8 @@ public class DataView {
    
     //JTable table = new JTable(17, 10);  
     //table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见 
-    
+    //JTable table = completedTable(getTestTable());
+    //table.
     scrollPane = new JScrollPane(completedTable(getTestTable()));  //向滚动面板中添加JTable
     scrollPane.setBounds(10, HEIGHT*17/72+5, WIDTH*10/16 - 10, HEIGHT*42/72);
     dataFrame.getContentPane().add(scrollPane);
@@ -451,10 +491,10 @@ public class DataView {
     TableColumn colTestResult = table.getColumnModel().getColumn(7);
     colNull.setPreferredWidth(20);
     colTestitem.setPreferredWidth(150);
-    colMaxvalue.setPreferredWidth(100);
-    colMinvalue.setPreferredWidth(100);
-    colTestvalue.setPreferredWidth(100);
-    colTestResult.setPreferredWidth(100);
+    colMaxvalue.setPreferredWidth(120);
+    colMinvalue.setPreferredWidth(120);
+    colTestvalue.setPreferredWidth(120);
+    colTestResult.setPreferredWidth(150);
     //colTestvalue.setMaxWidth(100);
     //colTestvalue.setMinWidth(100);
 
