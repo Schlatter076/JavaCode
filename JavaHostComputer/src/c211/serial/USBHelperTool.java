@@ -45,11 +45,11 @@ public class USBHelperTool {
   private JButton checkButt;
   
   USBHelper usb = new USBHelper();
-
+ 
   /**
-   * Launch the application.
+   * 提供实例化本类方法
    */
-  public static void main(String[] args) {
+  public static void getUsbHelperTool() {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
@@ -61,16 +61,29 @@ public class USBHelperTool {
       }
     });
   }
+  
+  /*public static void main(String[] args) {
+    EventQueue.invokeLater(new Runnable() {
+      public void run() {
+        try {
+          USBHelperTool window = new USBHelperTool();
+          window.frame.setVisible(true);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    });
+  }*/
 
   /**
-   * Create the application.
+   * 本类构造器
    */
   public USBHelperTool() {
     initialize();
   }
 
   /**
-   * Initialize the contents of the frame.
+   * 初始化窗口
    */
   private void initialize() {
     frame = new JFrame();
@@ -275,8 +288,7 @@ public class USBHelperTool {
     recieveLabel.setFont(new Font("微软雅黑", Font.PLAIN, 14));
     recieveLabel.setBounds(10, 341, 109, 23);
     frame.getContentPane().add(recieveLabel);
-    
-    
+
   }
   
 }

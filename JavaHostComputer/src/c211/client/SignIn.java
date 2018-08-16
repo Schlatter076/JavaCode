@@ -150,7 +150,7 @@ public class SignIn {
           if((comUser && comPwd) || (adminUser && adminPwd)) {
             signInFrame.dispose();
             //signInFrame.setVisible(false);
-            DataView.dataShow(idField.getEditor().getItem().toString());
+            DataView.getDataView(idField.getEditor().getItem().toString());
             //DataView.main(null);
           }
           else
@@ -180,7 +180,7 @@ public class SignIn {
         if((comUser && comPwd) || (adminUser && adminPwd)) {
           signInFrame.dispose();
           //signInFrame.setVisible(false);
-          DataView.dataShow(idField.getEditor().getItem().toString());
+          DataView.getDataView(idField.getEditor().getItem().toString());
           //DataView.main(null);
         }
         else
