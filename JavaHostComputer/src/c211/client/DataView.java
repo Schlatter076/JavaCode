@@ -10,12 +10,16 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.awt.Color;
+import java.awt.Component;
+
 import javax.swing.JTextField;
 import java.awt.Font;
 import javax.swing.SwingConstants;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
@@ -86,6 +90,9 @@ public class DataView {
   private JButton COM6Butt;
   private JButton COM7Butt;
   private JButton COM8Butt;
+  
+  private JTable table;
+  int ngCount = 0;
   
   /**
    * 提供实例化本类方法
@@ -390,13 +397,18 @@ public class DataView {
     testButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        //progressBar.setString("%");
+     
         txtStop.setText("RUN");
+        table.setValueAt("?", 1, 7);
+        table.setValueAt("?", 3, 7);
+        table.setValueAt("?", 14, 7);
+        //table.set
+        txtStop.setBackground(new Color(255, 255, 0));
         new Thread(){
           public void run(){
             for(int i=0;i<=100;i++){
               try{
-                Thread.sleep(100);
+                Thread.sleep(60);
               }catch(InterruptedException e){
                 e.printStackTrace();
               }
@@ -406,8 +418,16 @@ public class DataView {
                   
             }
             //progressBar.setString("OVER");
-            txtStop.setText("STOP");
-            //tTimeField.setText("0");
+            table.setValueAt("PASS", 1, 7);
+            table.setValueAt("NG", 3, 7);
+            table.setValueAt("PASS", 14, 7);
+            //table.setSelectionBackground(Color.GREEN);
+            txtStop.setText("NG");
+            ngCount++;
+            ngField.setText(""+ ngCount +"");
+            totalField.setText(""+ ngCount +"");
+            table.getColumnModel().getColumn(7).setCellRenderer(new MyTableCellRenderrer());
+            txtStop.setBackground(Color.RED);
             
           }
         }.start();
@@ -497,9 +517,8 @@ public class DataView {
    
     //JTable table = new JTable(17, 10);  
     //table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见 
-    //JTable table = completedTable(getTestTable());
-    //table.
-    scrollPane = new JScrollPane(completedTable(getTestTable()));  //向滚动面板中添加JTable
+    table = completedTable(getTestTable());
+    scrollPane = new JScrollPane(table);  //向滚动面板中添加JTable   
     scrollPane.setBounds(10, HEIGHT*17/72+5, WIDTH*10/16 - 10, HEIGHT*42/72);
     dataFrame.getContentPane().add(scrollPane);
     
@@ -579,11 +598,12 @@ public class DataView {
 
     table.setEnabled(false);  //内容不可编辑
     DefaultTableCellRenderer   r   =   new   DefaultTableCellRenderer();  //设置
-    r.setHorizontalAlignment(JLabel.CENTER);  //单元格内容
-    table.setDefaultRenderer(Object.class,   r); //居中显示
+    r.setHorizontalAlignment(JLabel.CENTER);                             //单元格内容
+    table.setDefaultRenderer(Object.class,   r);                        //居中显示
     
     table.setRowHeight(27);  //设置行高
     //增加一行空白行
+    //AbstractTableModel tableModel = (AbstractTableModel) table.getModel();
     DefaultTableModel tableModel = (DefaultTableModel) table.getModel(); 
     tableModel.addRow(new Object[]{"*", "", "", "", "", "", "", "", "", "", "", "", ""}); 
     //table.setGridColor(Color.PINK);   //设置网格颜色
@@ -593,6 +613,33 @@ public class DataView {
     
     return table;
   }
+  ///////////////////////////////////////////////////////////////////////////
+  /**
+   * 定义一个类用来渲染某一单元格
+   * 用法：获取某一列值，其中单元格值为"PASS"则设为绿色，若为"NG"则设为红色
+   */
+  class MyTableCellRenderrer extends DefaultTableCellRenderer {
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+        int row, int column) {
+      
+      super.setHorizontalAlignment(JLabel.CENTER);  //该列居中显示
+      Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+      
+      if ("NG".equals(value + "")) {
+        comp.setBackground(Color.RED);
+      } else if("PASS".equals(value + "")) {
+        comp.setBackground(Color.GREEN);
+      } else { 
+        comp.setBackground(Color.WHITE);//这一行保证其他单元格颜色不变
+      }
+      return comp;
+    }
+  }
+  ///////////////////////////////////////////////////////////////////////////
   /**
    * 流程控制
    */
