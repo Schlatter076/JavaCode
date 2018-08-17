@@ -1,102 +1,63 @@
-八月 09, 2018 3:29:40 下午 jvisa.JVisa openInstrument
-信息: Open instrument USB0::0x1AB1::0x09C4::DM3R200200081::0::INSTR.
-八月 09, 2018 3:29:40 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:40 下午 jvisa.JVisa openInstrument
-信息: viInstrument = 0x00000001.
-八月 09, 2018 3:29:40 下午 jvisa.JVisa getAttribute
-信息: Get attribute 0x3FFF001A.
-八月 09, 2018 3:29:40 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:40 下午 jvisa.JVisa getAttribute
-信息: Attribute value = 0x07D0
-八月 09, 2018 3:29:40 下午 jvisa.JVisa setAttribute
-信息: Set attribute 0x3FFF001A to 0x00001403.
-八月 09, 2018 3:29:40 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:40 下午 jvisa.JVisa getAttribute
-信息: Get attribute 0x3FFF001A.
-八月 09, 2018 3:29:40 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:40 下午 jvisa.JVisa getAttribute
-信息: Attribute value = 0x1403
-八月 09, 2018 3:29:40 下午 jvisa.JVisa setAttribute
-信息: Set attribute 0x3FFF001A to 0x000007D0.
-八月 09, 2018 3:29:40 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:41 下午 jvisa.JVisa write
-信息: Write command "*IDN?".
-八月 09, 2018 3:29:41 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:41 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:29:41 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:29:41 下午 jvisa.JVisa read
-信息: Rigol Technologies,DM3058E,DM3R200200081,01.01.00.02.03.01
-八月 09, 2018 3:30:39 下午 jvisa.JVisa write
-信息: Write command ":measure:current:DC?".
-八月 09, 2018 3:30:39 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:30:42 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:30:42 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:30:42 下午 jvisa.JVisa read
-信息: 8.785079E-10
-八月 09, 2018 3:30:59 下午 jvisa.JVisa write
-信息: Write command ":measure:voltage:DC?".
-八月 09, 2018 3:30:59 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:00 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:31:00 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:00 下午 jvisa.JVisa read
-信息: -1.688458E-03
-八月 09, 2018 3:31:03 下午 jvisa.JVisa write
-信息: Write command ":measure:voltage:DC?".
-八月 09, 2018 3:31:03 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:04 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:31:04 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:04 下午 jvisa.JVisa read
-信息: -1.623022E-03
-八月 09, 2018 3:31:07 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:31:09 下午 jvisa.JVisaStatus printStatusDescription
-严重: viStatus = 0xFFFFFFFFBFFF0015
-八月 09, 2018 3:31:09 下午 jvisa.JVisaStatus printStatusDescription
-严重: VISA status 0xFFFFFFFFBFFF0015: �������ǰ������ʱ��
-八月 09, 2018 3:31:09 下午 jvisa.JVisa read
-严重: Reading count is 0.
-八月 09, 2018 3:31:11 下午 jvisa.JVisa write
-信息: Write command ":measure:voltage:DC?".
-八月 09, 2018 3:31:11 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:14 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:31:14 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:14 下午 jvisa.JVisa read
-信息: -1.475856E-03
-八月 09, 2018 3:31:16 下午 jvisa.JVisa write
-信息: Write command ":measure:voltage:DC?".
-八月 09, 2018 3:31:16 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:17 下午 jvisa.JVisa read
-信息: Read response.
-八月 09, 2018 3:31:17 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:17 下午 jvisa.JVisa read
-信息: -1.539902E-03
-八月 09, 2018 3:31:20 下午 jvisa.JVisa write
+八月 16, 2018 6:47:32 下午 jvisa.JVisa openInstrument
+信息: Open instrument GPIB0::2::INSTR.
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: viStatus = 0xFFFFFFFFBFFF009E
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: VISA status 0xFFFFFFFFBFFF009E: �޷��ҵ������VISA��VISA�Ĵ���⡣��ͨ������Ϊϵͳ��δ��װ�������������
+八月 16, 2018 6:47:32 下午 jvisa.JVisa openInstrument
+严重: Could not open session for GPIB0::2::INSTR.
+八月 16, 2018 6:47:32 下午 jvisa.JVisa write
 信息: Write command "*RST".
-八月 09, 2018 3:31:20 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
-八月 09, 2018 3:31:20 下午 jvisa.JVisa clear
-信息: Calling viClear(1).
-八月 09, 2018 3:31:22 下午 jvisa.JVisaStatus printStatusDescription
-详细: viStatus = 0x00000000
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: viStatus = 0xFFFFFFFFBFFF000E
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: VISA status 0xFFFFFFFFBFFF000E: �Ự�����������Ч��
+八月 16, 2018 6:47:32 下午 jvisa.JVisa write
+严重: Could not write *RST.
+八月 16, 2018 6:47:32 下午 jvisa.JVisa write
+严重: VISA status 0xFFFFFFFFBFFF000E: �Ự�����������Ч��
+jvisa.JVisaException: VISA status 0xFFFFFFFFBFFF000E: �Ự�����������Ч��
+	at jvisa.JVisa.write(JVisa.java:532)
+	at c211.serial.USBHelper.visaWrite(USBHelper.java:144)
+	at c211.serial.USBHelperTool$5.mouseClicked(USBHelperTool.java:185)
+	at java.awt.AWTEventMulticaster.mouseClicked(AWTEventMulticaster.java:270)
+	at java.awt.Component.processMouseEvent(Component.java:6542)
+	at javax.swing.JComponent.processMouseEvent(JComponent.java:3324)
+	at java.awt.Component.processEvent(Component.java:6304)
+	at java.awt.Container.processEvent(Container.java:2239)
+	at java.awt.Component.dispatchEventImpl(Component.java:4889)
+	at java.awt.Container.dispatchEventImpl(Container.java:2297)
+	at java.awt.Component.dispatchEvent(Component.java:4711)
+	at java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4904)
+	at java.awt.LightweightDispatcher.processMouseEvent(Container.java:4544)
+	at java.awt.LightweightDispatcher.dispatchEvent(Container.java:4476)
+	at java.awt.Container.dispatchEventImpl(Container.java:2283)
+	at java.awt.Window.dispatchEventImpl(Window.java:2746)
+	at java.awt.Component.dispatchEvent(Component.java:4711)
+	at java.awt.EventQueue.dispatchEventImpl(EventQueue.java:760)
+	at java.awt.EventQueue.access$500(EventQueue.java:97)
+	at java.awt.EventQueue$3.run(EventQueue.java:709)
+	at java.awt.EventQueue$3.run(EventQueue.java:703)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:74)
+	at java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:84)
+	at java.awt.EventQueue$4.run(EventQueue.java:733)
+	at java.awt.EventQueue$4.run(EventQueue.java:731)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:74)
+	at java.awt.EventQueue.dispatchEvent(EventQueue.java:730)
+	at java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:205)
+	at java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:116)
+	at java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:105)
+	at java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:93)
+	at java.awt.EventDispatchThread.run(EventDispatchThread.java:82)
+
+八月 16, 2018 6:47:32 下午 jvisa.JVisa clear
+信息: Calling viClear(0).
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: viStatus = 0xFFFFFFFFBFFF000E
+八月 16, 2018 6:47:32 下午 jvisa.JVisaStatus printStatusDescription
+严重: VISA status 0xFFFFFFFFBFFF000E: �Ự�����������Ч��
+八月 16, 2018 6:47:32 下午 jvisa.JVisa clear
+严重: Error calling viClear().

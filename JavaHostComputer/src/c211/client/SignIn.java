@@ -38,9 +38,10 @@ public class SignIn {
   private JButton exitButt;
   private User commom;
   private User admin;
-
+  
   /**
-   * Launch the application.
+   * 主方法，运行登录界面
+   * @param args
    */
   public static void main(String[] args) {
     EventQueue.invokeLater(new Runnable() {
@@ -54,15 +55,16 @@ public class SignIn {
       }
     });
   }
+  
   /**
-   * Create the application.
+   * 构造器
    */
   public SignIn() {
     initialize();
   }
 
   /**
-   * Initialize the contents of the frame.
+   * 初始化界面
    */
   private void initialize() {
     signInFrame = new JFrame();

@@ -89,7 +89,7 @@ public class USBHelperTool {
     frame = new JFrame();
     frame.getContentPane().setBackground(new Color(255, 228, 225));
     frame.setBounds(100, 100, 681, 562);
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setResizable(false); //窗口大小不可更改
     //frame.setUndecorated(true); //去掉标题栏
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
