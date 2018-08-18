@@ -6,6 +6,8 @@ import c211.serialException.NoSuchPort;
 import c211.serialException.NotASerialPort;
 import c211.serialException.PortInUse;
 import c211.serialException.SerialPortParamFail;
+import c211.test.BarChart;
+import c211.test.PieChart;
 import gnu.io.SerialPort;
 
 import java.awt.EventQueue;
@@ -14,7 +16,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 
@@ -27,15 +28,16 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+
+import org.jfree.chart.ChartPanel;
+
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -48,10 +50,6 @@ import javax.swing.JProgressBar;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-
-import javax.swing.JComboBox;
 
 /**
  * 测试页面
@@ -106,14 +104,16 @@ public class DataView {
   private JButton COM8Butt;
   private JPanel nyPanel;
   private JLabel pNameLabel;
+  private JLabel timeLabel;
 
-  int ngCount = 0;
-  int okCount = 0;
-  int totalCount = 0;
-  int timeCount = 0;
+  public int ngCount = 0;
+  public int okCount = 0;
+  public int totalCount = 0;
+  public int timeCount = 0;
 
   private JTable table;
   private Robot robot;
+  private JScrollPane chartScPanel;
 
   /**
    * 提供实例化本类方法
@@ -177,10 +177,10 @@ public class DataView {
     dataFrame.setUndecorated(true);
 
     // 更换背景图片
-    //ImageIcon img_1 = new ImageIcon("src/back.jpg");
-    //ImageIcon img_1 = new ImageIcon("src/img11.jpg");
+    // ImageIcon img_1 = new ImageIcon("src/back.jpg");
+    // ImageIcon img_1 = new ImageIcon("src/img11.jpg");
     ImageIcon img_1 = new ImageIcon("src/run.jpg");
-    //ImageIcon img_1 = new ImageIcon("src/water.png");
+    // ImageIcon img_1 = new ImageIcon("src/water.png");
     JLabel imgLabel = new JLabel(img_1);
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
     imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
@@ -198,7 +198,7 @@ public class DataView {
     headTxtField.setEditable(false);
     headTxtField.setOpaque(false);
     headTxtField.setBounds(0, 0, WIDTH, HEIGHT / 9 - 5);
-    headTxtField.setText("C211记忆开关测试系统");
+    headTxtField.setText("记忆开关测试系统");
     headTxtField.setHorizontalAlignment(SwingConstants.CENTER);
     headTxtField.setForeground(new Color(0, 0, 255));
     headTxtField.setFont(new Font("等线", Font.BOLD, 50));
@@ -286,7 +286,7 @@ public class DataView {
     resultPanel.add(tTimeLabel);
 
     menuPanel = new JPanel();
-    menuPanel.setOpaque(false);  //设置面板透明
+    menuPanel.setOpaque(false); // 设置面板透明
     menuPanel.setBounds(WIDTH * 12 / 16 + 10, HEIGHT / 9, WIDTH * 4 / 16 - 10, HEIGHT * 8 / 9 - 5);
     menuPanel.setBackground(new Color(255, 250, 250));
     dataFrame.getContentPane().add(menuPanel);
@@ -395,13 +395,21 @@ public class DataView {
     updateMnItm.setForeground(new Color(0, 0, 0));
     updateMnItm.setFont(new Font("等线", Font.PLAIN, 14));
     systemMenu.add(updateMnItm);
-    
-    JLabel timeLabel = new JLabel();
+
+    timeLabel = new JLabel();
     timeLabel.setText("我是时间标签");
     timeLabel.setForeground(Color.CYAN);
     timeLabel.setFont(new Font("等线", Font.BOLD | Font.ITALIC, 14));
-    timeLabel.setBounds(MW/2, MH*31/32 - 10, MW/2, MH / 32);
+    timeLabel.setBounds(MW / 2, MH * 31 / 32 - 10, MW / 2, MH / 32);
     menuPanel.add(timeLabel);
+
+    ChartPanel chartPanel = new PieChart(10, 2).getChartPanel();
+    //ChartPanel chartPanel = new BarChart().getChartPanel();
+    chartPanel.setOpaque(false);
+    //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
+    chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
+    
+    menuPanel.add(chartPanel);
     // 实时刷新时间
     new Thread() {
       public void run() {
@@ -427,7 +435,7 @@ public class DataView {
     runPanel.setLayout(null);
 
     txtStop = new JTextField();
-    //txtStop.setOpaque(false);
+    // txtStop.setOpaque(false);
     txtStop.setEditable(false);
     txtStop.setText("STOP");
     txtStop.setHorizontalAlignment(SwingConstants.CENTER);
@@ -445,12 +453,21 @@ public class DataView {
     runPanel.add(progressBar);
 
     testButt = new JButton("点我");
-    //testButt.setOpaque(false);
+    // testButt.setOpaque(false);
     testButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        initPort();
-        startTest();        
+        if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
+          // testButt.setEnabled(false);
+          startTest();
+        } else if (e.getButton() == MouseEvent.BUTTON2 && e.getClickCount() == 1) {
+          // testButt.setEnabled(false);
+          initPort();
+        } else if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 1) {
+          // testButt.setEnabled(false);
+          startTest_righiKey();
+        } else
+          JOptionPane.showMessageDialog(null, "别他妈胡乱操作好吗？");
       }
     });
 
@@ -467,7 +484,6 @@ public class DataView {
     serialPanel.setBackground(new Color(255, 228, 225));
     dataFrame.getContentPane().add(serialPanel);
     serialPanel.setLayout(null);
-
     // 获取该面板长高，以方便布局
     int SW = serialPanel.getWidth();
     int SH = serialPanel.getHeight();
@@ -581,14 +597,15 @@ public class DataView {
     pNameLabel.setForeground(new Color(204, 102, 255));
     // pNameLabel.setText(text);
     pNameLabel.setBackground(new Color(0, 51, 204));
-    pNameLabel.setBounds(0, 0, SW/2, SH / 3);
+    pNameLabel.setBounds(0, 0, SW / 2, SH / 3);
     nyPanel.add(pNameLabel);
 
     // JTable table = new JTable(17, 10);
     // table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见
     table = completedTable(getTestTable());
     scrollPane = new JScrollPane(table); // 向滚动面板中添加JTable
-    scrollPane.setOpaque(false);
+    // scrollPane.setOpaque(false);
+    // scrollPane.getViewport().setOpaque(false); //设置为透明
     scrollPane.setBounds(10, HEIGHT * 17 / 72 + 5, WIDTH * 10 / 16 - 10, HEIGHT * 42 / 72);
     dataFrame.getContentPane().add(scrollPane);
 
@@ -648,7 +665,7 @@ public class DataView {
    */
   public JTable completedTable(JTable table) {
 
-    table.setOpaque(false);  //设置表透明
+    // table.setOpaque(false); //设置表透明
     JTableHeader jTableHeader = table.getTableHeader(); // 获取表头
     // 设置表头名称字体样式
     jTableHeader.setFont(new Font("", Font.PLAIN, 14));
@@ -693,7 +710,19 @@ public class DataView {
     return table;
   }
 
-  ///////////////////////////////////////////////////////////////////////////
+  /**
+   * 初始化table值
+   * 
+   * @param table
+   */
+  public void initTable() {
+    for (int i = 1; i <= 14; i++) {
+      table.setValueAt("?", i, 5); // 清空测试值
+      table.setValueAt("?", i, 7); // 清空测试结果
+    }
+  }
+
+///////////////////////////////////////////////////////////////////////////
   /**
    * 定义一个类用来渲染某一单元格 用法：获取某一列值，其中单元格值为"PASS"则设为绿色，若为"NG"则设为红色
    */
@@ -718,7 +747,6 @@ public class DataView {
       return comp;
     }
   }
-
   ///////////////////////////////////////////////////////////////////////////
   /**
    * 初始化串口
@@ -731,12 +759,12 @@ public class DataView {
     } else {
       COM1Butt.setBackground(Color.RED);
     }
-    if (!port.contains("COM2")) {
+    /*if (!port.contains("COM2")) {
       JOptionPane.showMessageDialog(null, "未发现串口2");
       COM2Butt.setBackground(Color.BLACK);
     } else {
       COM2Butt.setBackground(Color.RED);
-    }
+    }*/
     if (!port.contains("COM3")) {
       JOptionPane.showMessageDialog(null, "未发现串口3");
       COM3Butt.setBackground(Color.BLACK);
@@ -749,7 +777,7 @@ public class DataView {
     } else {
       COM4Butt.setBackground(Color.RED);
     }
-    if (!port.contains("COM5")) {
+    /*if (!port.contains("COM5")) {
       JOptionPane.showMessageDialog(null, "未发现串口5");
       COM5Butt.setBackground(Color.BLACK);
     } else {
@@ -760,7 +788,7 @@ public class DataView {
       COM6Butt.setBackground(Color.BLACK);
     } else {
       COM6Butt.setBackground(Color.RED);
-    }
+    }*/
     if (!port.contains("COM7")) {
       JOptionPane.showMessageDialog(null, "未发现串口7");
       COM7Butt.setBackground(Color.BLACK);
@@ -784,6 +812,27 @@ public class DataView {
    */
   
   /**
+   * 刷新ok框数值
+   */
+  public void setOkFieldCount() {
+    okCount++;
+    okField.setText(okCount +"");
+  }
+  /**
+   * 刷新ng框数值
+   */
+  public void setNgFieldCount() {
+    ngCount++;
+    ngField.setText(ngCount +"");
+  }
+  /**
+   * 刷新总值
+   */
+  public void setTotalFieldCount() {
+    totalCount = okCount + ngCount;
+    totalField.setText(totalCount +"");
+  }
+  /**
    * 测试开始则计时
    */
   public void setTtimeFieldCount() {
@@ -802,21 +851,65 @@ public class DataView {
       }
     }.start();
   }
+  /**
+   * table渲染色，测试结果为"PASS"则设为绿色，"NG"为红色
+   */
+  public void setTableCellRenderer() {
+    table.getColumnModel().getColumn(7).setCellRenderer(new MyTableCellRenderrer());
+  }
+  /**
+   * 设置运行状态框为NG
+   */
+  public void setTxtStopFieldNG() {
+    txtStop.setText("NG");
+    txtStop.setBackground(Color.RED);
+  }
+  /**
+   * 设置运行状态框为PASS
+   */
+  public void setTxtStopFieldPASS() {
+    txtStop.setText("PASS");
+    txtStop.setBackground(Color.GREEN);
+  }
+  /**
+   * 设置运行状态框为STOP
+   */
+  public void setTxtStopFieldSTOP() {
+    txtStop.setText("STOP");
+    txtStop.setBackground(new Color(255, 255, 0));
+  }
+  /**
+   * 设置运行状态框为RUN
+   */
+  public void setTxtStopFieldRUN() {
+    txtStop.setText("RUN");
+    txtStop.setBackground(new Color(255, 255, 0));
+  }
+  /**
+   * 设置表测试结果为PASS
+   * @param i 第几行(1~14)
+   */
+  public void setTableTestResultPASS(int i) {
+    table.setValueAt("PASS", i, 7);
+    setTableCellRenderer();
+  }
+  /**
+   * 设置表测试结果为NG
+   * @param i 第几行(1~14)
+   */
+  public void setTableTestResultNG(int i) {
+    table.setValueAt("NG", i, 7);
+    setTableCellRenderer();
+  }
 
   /**
    * 流程控制
    */
   public void startTest() {
-    
-    //initPort();
-    txtStop.setText("RUN");
-    txtStop.setBackground(new Color(255, 255, 0));
+
+    setTxtStopFieldRUN();
     setTtimeFieldCount();
-    table.setValueAt("?", 1, 7);
-    table.setValueAt("?", 3, 7);
-    table.setValueAt("?", 3, 5);
-    table.setValueAt("?", 2, 5);
-    table.setValueAt("?", 14, 7);
+    initTable();
     new Thread() {
       public void run() {
         for (int i = 0; i <= 100; i++) {
@@ -826,23 +919,41 @@ public class DataView {
             e.printStackTrace();
           }
           progressBar.setValue(i);
-          // String str =
-          // tTimeField.setText("" + i + "");
-
         }
-        // progressBar.setString("OVER");
-        table.setValueAt("PASS", 1, 7);
-        table.setValueAt("NG", 3, 7);
-        table.setValueAt("PASS", 14, 7);
-        // table.setSelectionBackground(Color.GREEN);
-        txtStop.setText("NG");
-        ngCount++;
-        totalCount = ngCount + okCount;
-        ngField.setText("" + ngCount + "");
-        totalField.setText("" + totalCount + "");
-        table.getColumnModel().getColumn(7).setCellRenderer(new MyTableCellRenderrer());
-        txtStop.setBackground(Color.RED);
+        for(int i = 1; i <= 14; i++) {
+          setTableTestResultNG(i);
+        }
+        setTxtStopFieldNG();
+        setNgFieldCount();
+        setTotalFieldCount();
+        setTableCellRenderer();
+      }
+    }.start();
 
+  }
+  
+  public void startTest_righiKey() {
+
+    setTxtStopFieldRUN();
+    setTtimeFieldCount();
+    initTable();
+    new Thread() {
+      public void run() {
+        for (int i = 0; i <= 100; i++) {
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+          progressBar.setValue(i); // 进度条值不断变化
+        }
+        for(int i = 1; i <= 14; i++) {
+          setTableTestResultPASS(i);
+        }
+        setTxtStopFieldPASS();
+        setOkFieldCount();
+        setTotalFieldCount();
+        setTableCellRenderer();
       }
     }.start();
 
