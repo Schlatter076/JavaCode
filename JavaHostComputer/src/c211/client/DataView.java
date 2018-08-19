@@ -30,6 +30,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.event.ChartChangeEvent;
 
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
@@ -105,21 +106,25 @@ public class DataView {
   private JPanel nyPanel;
   private JLabel pNameLabel;
   private JLabel timeLabel;
+  private ChartPanel chartPanel;
+  private PieChart pieChart;
 
   public int ngCount = 0;
   public int okCount = 0;
   public int totalCount = 0;
   public int timeCount = 0;
+  public int WIDTH;
+  public int HEIGHT;
+  public int MW;
 
   private JTable table;
   private Robot robot;
-  private JScrollPane chartScPanel;
 
   /**
    * 提供实例化本类方法
    * 
    * @param user
-   *          接收登录用户名，以区分权限
+   * 接收登录用户名，以区分权限
    */
   public static void getDataView(String user) {
     EventQueue.invokeLater(new Runnable() {
@@ -402,14 +407,18 @@ public class DataView {
     timeLabel.setFont(new Font("等线", Font.BOLD | Font.ITALIC, 14));
     timeLabel.setBounds(MW / 2, MH * 31 / 32 - 10, MW / 2, MH / 32);
     menuPanel.add(timeLabel);
-
-    ChartPanel chartPanel = new PieChart(10, 2).getChartPanel();
+    
+    //PieChart.getDataSet(10, 2);
+    pieChart = new PieChart(okCount, ngCount);
+    //pieChart.setOkData(10);
+    //pieChart.setNgData(2);
+    chartPanel = pieChart.getChartPanel();
     //ChartPanel chartPanel = new BarChart().getChartPanel();
     chartPanel.setOpaque(false);
     //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
     chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
+    menuPanel.add(chartPanel);      
     
-    menuPanel.add(chartPanel);
     // 实时刷新时间
     new Thread() {
       public void run() {
@@ -462,7 +471,8 @@ public class DataView {
           startTest();
         } else if (e.getButton() == MouseEvent.BUTTON2 && e.getClickCount() == 1) {
           // testButt.setEnabled(false);
-          initPort();
+          initPort();  
+          //setPieChart();
         } else if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 1) {
           // testButt.setEnabled(false);
           startTest_righiKey();
@@ -600,12 +610,14 @@ public class DataView {
     pNameLabel.setBounds(0, 0, SW / 2, SH / 3);
     nyPanel.add(pNameLabel);
 
-    // JTable table = new JTable(17, 10);
-    // table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见
+    //JTable table = new JTable(17, 10);
+    //table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见
     table = completedTable(getTestTable());
     scrollPane = new JScrollPane(table); // 向滚动面板中添加JTable
-    // scrollPane.setOpaque(false);
-    // scrollPane.getViewport().setOpaque(false); //设置为透明
+    
+    //scrollPane.setOpaque(false);
+    //scrollPane.getViewport().setOpaque(false); //设置为透明
+    
     scrollPane.setBounds(10, HEIGHT * 17 / 72 + 5, WIDTH * 10 / 16 - 10, HEIGHT * 42 / 72);
     dataFrame.getContentPane().add(scrollPane);
 
@@ -721,7 +733,6 @@ public class DataView {
       table.setValueAt("?", i, 7); // 清空测试结果
     }
   }
-
 ///////////////////////////////////////////////////////////////////////////
   /**
    * 定义一个类用来渲染某一单元格 用法：获取某一列值，其中单元格值为"PASS"则设为绿色，若为"NG"则设为红色
@@ -901,6 +912,24 @@ public class DataView {
     table.setValueAt("NG", i, 7);
     setTableCellRenderer();
   }
+  
+  public void setPieChart() {
+    menuPanel.remove(chartPanel);
+    pieChart = new PieChart(4, 2);
+    chartPanel = pieChart.getChartPanel();
+    chartPanel.setOpaque(false);
+    //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
+    chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
+    menuPanel.add(chartPanel);
+  }
+  /*public void setChart(int ok, int ng) {
+    chartPanel = new PieChart(ok, ng).getChartPanel();
+    //ChartPanel chartPanel = new BarChart().getChartPanel();
+    chartPanel.setOpaque(false);
+    //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
+    chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
+    menuPanel.add(chartPanel);
+  }*/
 
   /**
    * 流程控制
@@ -927,6 +956,8 @@ public class DataView {
         setNgFieldCount();
         setTotalFieldCount();
         setTableCellRenderer();
+        setPieChart();
+        //setChart(okCount, ngCount);
       }
     }.start();
 
@@ -954,6 +985,8 @@ public class DataView {
         setOkFieldCount();
         setTotalFieldCount();
         setTableCellRenderer();
+        setPieChart();
+        //setChart(okCount, ngCount);
       }
     }.start();
 

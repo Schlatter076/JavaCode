@@ -56,7 +56,7 @@ public class PieChart_1 {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.getContentPane().setLayout(null);
     
-    pieChart = new PieChart(okCount, ngCount);
+    pieChart = new PieChart(10, 2);
     chartPanel = pieChart.getChartPanel();
     
     scrollPane = new JScrollPane(chartPanel);
@@ -67,26 +67,6 @@ public class PieChart_1 {
     btnNewButton.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        new Thread() {
-          public void run() {
-            try {
-              while(true) {
-                //okCount += 2;
-                ngCount++;
-                scrollPane = new JScrollPane(new PieChart(okCount, ngCount).getChartPanel());
-                frame.getContentPane().add(scrollPane); 
-                Thread.sleep(1000);
-              }
-              /*okCount += 2;
-              ngCount++;
-              scrollPane = new JScrollPane(new PieChart(okCount, ngCount).getChartPanel());
-              frame.getContentPane().add(scrollPane); 
-              Thread.sleep(1000);*/
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
-          }
-        }.start();
         
         /*okCount += 2;
         ngCount++;

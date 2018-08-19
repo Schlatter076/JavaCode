@@ -15,7 +15,7 @@ public class DBHelper {
   private final static String driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
   private final static String url = "jdbc:sqlserver://localhost:1433;databaseName=ectestsys";
   private final static String username = "sa";
-  private final static String password = "SQLserver0";
+  private final static String password = "524076";
   private Connection connection = null;
   private ResultSet res = null;
   /**
