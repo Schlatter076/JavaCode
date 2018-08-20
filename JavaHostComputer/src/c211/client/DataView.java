@@ -6,32 +6,24 @@ import c211.serialException.NoSuchPort;
 import c211.serialException.NotASerialPort;
 import c211.serialException.PortInUse;
 import c211.serialException.SerialPortParamFail;
-import c211.test.BarChart;
-import c211.test.PieChart;
-import gnu.io.SerialPort;
 
+import gnu.io.SerialPort;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-
 import java.awt.Color;
 import java.awt.Component;
-
 import javax.swing.JTextField;
 import java.awt.Font;
-import java.awt.Robot;
-
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
-
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.event.ChartChangeEvent;
-
+import org.jfree.chart.plot.PiePlot;
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -51,6 +43,9 @@ import javax.swing.JProgressBar;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+
+import javax.swing.JCheckBox;
 
 /**
  * 测试页面
@@ -107,18 +102,17 @@ public class DataView {
   private JLabel pNameLabel;
   private JLabel timeLabel;
   private ChartPanel chartPanel;
-  private PieChart pieChart;
+  private MyPieChart pieChart;
+  private PiePlot piePlot;
+  private JCheckBox nayinCbox;
+  private JCheckBox spotTestCbox;
 
-  public int ngCount = 0;
-  public int okCount = 0;
-  public int totalCount = 0;
-  public int timeCount = 0;
-  public int WIDTH;
-  public int HEIGHT;
-  public int MW;
+  private int ngCount = 0;
+  private int okCount = 0;
+  private int totalCount = 0;
+  private int timeCount = 0;
 
   private JTable table;
-  private Robot robot;
 
   /**
    * 提供实例化本类方法
@@ -221,9 +215,9 @@ public class DataView {
     totalField = new JTextField();
     totalField.setOpaque(false);
     totalField.setEditable(false);
-    totalField.setText("" + totalCount + "");
+    //totalField.setText("" + totalCount + "");
     totalField.setHorizontalAlignment(SwingConstants.CENTER);
-    totalField.setForeground(new Color(0, 128, 0));
+    totalField.setForeground(new Color(139, 69, 19));
     totalField.setFont(new Font("等线", Font.PLAIN, 40));
     totalField.setBounds(WIDTH * 1 / 20, HEIGHT * 9 / 288, WIDTH * 6 / 64, HEIGHT * 9 / 144);
     totalField.setBackground(new Color(189, 183, 107));
@@ -233,9 +227,9 @@ public class DataView {
     okField = new JTextField();
     okField.setOpaque(false);
     okField.setEditable(false);
-    okField.setText("" + okCount + "");
+    //okField.setText("" + okCount + "");
     okField.setHorizontalAlignment(SwingConstants.CENTER);
-    okField.setForeground(new Color(0, 128, 0));
+    okField.setForeground(new Color(0, 204, 51));
     okField.setFont(new Font("等线", Font.PLAIN, 40));
     okField.setBounds(WIDTH * 31 / 160, HEIGHT * 9 / 288, WIDTH * 6 / 64, HEIGHT * 9 / 144);
     okField.setBackground(new Color(189, 183, 107));
@@ -245,7 +239,7 @@ public class DataView {
     ngField = new JTextField();
     ngField.setOpaque(false);
     ngField.setEditable(false);
-    ngField.setText("" + ngCount + "");
+    //ngField.setText("" + ngCount + "");
     ngField.setHorizontalAlignment(SwingConstants.CENTER);
     ngField.setFont(new Font("等线", Font.PLAIN, 40));
     ngField.setForeground(new Color(255, 0, 0));
@@ -260,7 +254,7 @@ public class DataView {
     tTimeField.setText("" + timeCount + "");
     tTimeField.setHorizontalAlignment(SwingConstants.CENTER);
     tTimeField.setFont(new Font("等线", Font.PLAIN, 40));
-    tTimeField.setForeground(new Color(0, 128, 0));
+    tTimeField.setForeground(new Color(0, 204, 51));
     tTimeField.setBounds(WIDTH * 77 / 160, HEIGHT * 9 / 288, WIDTH * 6 / 64, HEIGHT * 9 / 144);
     tTimeField.setBackground(new Color(189, 183, 107));
     tTimeField.setColumns(10);
@@ -297,8 +291,8 @@ public class DataView {
     dataFrame.getContentPane().add(menuPanel);
     menuPanel.setLayout(null);
     // 获取当前面板长和高
-    int MW = menuPanel.getWidth();
-    int MH = menuPanel.getHeight();
+    final int MW = menuPanel.getWidth();
+    final int MH = menuPanel.getHeight();
 
     menuBar = new JMenuBar();
     menuBar.setOpaque(false);
@@ -371,6 +365,14 @@ public class DataView {
     editMenu.add(viewReportMnItm);
 
     viewResultMnItm = new JMenuItem("查看测试结果");
+    viewResultMnItm.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        if (userName.equals("admin"))
+          ViewResult.getViewResult();
+        else
+          JOptionPane.showMessageDialog(null, "你没有权限操作", "警告", JOptionPane.WARNING_MESSAGE);
+      }
+    });
     viewResultMnItm.setForeground(new Color(0, 0, 0));
     viewResultMnItm.setFont(new Font("等线", Font.PLAIN, 14));
     editMenu.add(viewResultMnItm);
@@ -408,16 +410,14 @@ public class DataView {
     timeLabel.setBounds(MW / 2, MH * 31 / 32 - 10, MW / 2, MH / 32);
     menuPanel.add(timeLabel);
     
-    //PieChart.getDataSet(10, 2);
-    pieChart = new PieChart(okCount, ngCount);
-    //pieChart.setOkData(10);
-    //pieChart.setNgData(2);
+    pieChart = new MyPieChart(okCount, ngCount);
     chartPanel = pieChart.getChartPanel();
-    //ChartPanel chartPanel = new BarChart().getChartPanel();
     chartPanel.setOpaque(false);
     //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
     chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
-    menuPanel.add(chartPanel);      
+    menuPanel.add(chartPanel); 
+    
+    initCountAndPieChart();
     
     // 实时刷新时间
     new Thread() {
@@ -461,8 +461,7 @@ public class DataView {
     progressBar.setBounds(0, HEIGHT * 9 / 72 + 5, WIDTH * 2 / 16, HEIGHT * 2 / 72);
     runPanel.add(progressBar);
 
-    testButt = new JButton("点我");
-    // testButt.setOpaque(false);
+    testButt = new JButton("点我");    
     testButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
@@ -471,8 +470,11 @@ public class DataView {
           startTest();
         } else if (e.getButton() == MouseEvent.BUTTON2 && e.getClickCount() == 1) {
           // testButt.setEnabled(false);
-          initPort();  
-          //setPieChart();
+          initPort();
+          for(int i = 0; i < 99999; i++)
+            for(int j = 0; j < 999; j++) {}
+          COM1Butt.doClick();
+
         } else if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 1) {
           // testButt.setEnabled(false);
           startTest_righiKey();
@@ -495,10 +497,35 @@ public class DataView {
     dataFrame.getContentPane().add(serialPanel);
     serialPanel.setLayout(null);
     // 获取该面板长高，以方便布局
-    int SW = serialPanel.getWidth();
-    int SH = serialPanel.getHeight();
+    final int SW = serialPanel.getWidth();
+    final int SH = serialPanel.getHeight();
 
     COM1Butt = new JButton("COM1");
+    COM1Butt.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        try {
+          if (SerialPortTool.findPort().contains("COM1")) {
+            COM1Butt.setBackground(Color.RED);
+            SerialPort COM1 = SerialPortTool.getPort("COM1", 9600, 8, 1, 0);
+            SerialPortTool.write(COM1, ":function:voltage:DC");
+            SerialPortTool.write(COM1, ":measure:voltage:DC?");
+            table.setValueAt(SerialPortTool.read(COM1), 3, 5);
+            SerialPortTool.closePort(COM1);
+          } else {
+            JOptionPane.showMessageDialog(null, "未发现串口1", "警告", JOptionPane.WARNING_MESSAGE);
+          }
+
+        } catch (SerialPortParamFail e1) {
+          e1.printStackTrace();
+        } catch (NotASerialPort e1) {
+          e1.printStackTrace();
+        } catch (NoSuchPort e1) {
+          e1.printStackTrace();
+        } catch (PortInUse e1) {
+          e1.printStackTrace();
+        }
+      }
+    });
     COM1Butt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
@@ -605,19 +632,31 @@ public class DataView {
     pNameLabel = new JLabel("产品型号: C211");
     pNameLabel.setFont(new Font("等线", Font.BOLD, 30));
     pNameLabel.setForeground(new Color(204, 102, 255));
-    // pNameLabel.setText(text);
     pNameLabel.setBackground(new Color(0, 51, 204));
     pNameLabel.setBounds(0, 0, SW / 2, SH / 3);
     nyPanel.add(pNameLabel);
+    
+    nayinCbox = new JCheckBox("捺印");
+    nayinCbox.setOpaque(false);
+    nayinCbox.setForeground(new Color(204, 102, 255));
+    nayinCbox.setSelected(true);
+    nayinCbox.setFont(new Font("等线", Font.PLAIN, 18));
+    nayinCbox.setBounds(SW/2, SH/12, SW/8, SH/6);
+    nyPanel.add(nayinCbox);
+    
+    spotTestCbox = new JCheckBox("点测");
+    spotTestCbox.setOpaque(false);
+    spotTestCbox.setForeground(new Color(204, 102, 255));
+    spotTestCbox.setFont(new Font("等线", Font.PLAIN, 18));
+    spotTestCbox.setBounds(SW*5/8, SH/12, SW/8, SH/6);
+    nyPanel.add(spotTestCbox);
 
     //JTable table = new JTable(17, 10);
     //table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);//关闭表格列自动调整，此时水平滚动条可见
     table = completedTable(getTestTable());
     scrollPane = new JScrollPane(table); // 向滚动面板中添加JTable
-    
     //scrollPane.setOpaque(false);
     //scrollPane.getViewport().setOpaque(false); //设置为透明
-    
     scrollPane.setBounds(10, HEIGHT * 17 / 72 + 5, WIDTH * 10 / 16 - 10, HEIGHT * 42 / 72);
     dataFrame.getContentPane().add(scrollPane);
 
@@ -724,8 +763,6 @@ public class DataView {
 
   /**
    * 初始化table值
-   * 
-   * @param table
    */
   public void initTable() {
     for (int i = 1; i <= 14; i++) {
@@ -749,7 +786,7 @@ public class DataView {
       Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
       if ("PASS".equals(value + "")) {
-        comp.setBackground(Color.GREEN);
+        comp.setBackground(new Color(0, 204, 51));
       } else if ("NG".equals(value + "")) {
         comp.setBackground(Color.RED);
       } else {
@@ -813,21 +850,36 @@ public class DataView {
       COM8Butt.setBackground(Color.RED);
     }
   }
-
-  /*
-   * try { robot = new Robot(); robot.setAutoWaitForIdle(true);// 执行完一个事件后再执行下一个
-   * robot.mouseMove(testButt.getX(), testButt.getY()); //获取“点我”按钮的坐标
-   * robot.mousePress(InputEvent.BUTTON1_MASK); //按下鼠标左键 robot.delay(100);
-   * //延时100ms robot.mouseRelease(InputEvent.BUTTON1_MASK); //释放鼠标左键，完成点击 } catch
-   * (AWTException e1) { e1.printStackTrace(); }
+  /**
+   * 初始化界面计数值和饼图
    */
-  
+  public void initCountAndPieChart() {
+    if(getRecorddata() != null) {
+      okCount = getOkCount();
+      ngCount = getNgCount();
+      totalCount = getTotalCount();
+      okField.setText(okCount + "");
+      ngField.setText(ngCount + "");
+      totalField.setText(totalCount + "");
+      setPieChart(okCount, ngCount);
+    }
+    else {
+      okCount = 0;
+      ngCount = 0;
+      totalCount = 0;
+      okField.setText(okCount + "");
+      ngField.setText(ngCount + "");
+      totalField.setText(totalCount + "");
+      setPieChart(okCount, ngCount);
+    }   
+  }
   /**
    * 刷新ok框数值
    */
   public void setOkFieldCount() {
     okCount++;
     okField.setText(okCount +"");
+    setPieChart(okCount, ngCount);
   }
   /**
    * 刷新ng框数值
@@ -835,6 +887,7 @@ public class DataView {
   public void setNgFieldCount() {
     ngCount++;
     ngField.setText(ngCount +"");
+    setPieChart(okCount, ngCount);
   }
   /**
    * 刷新总值
@@ -880,7 +933,7 @@ public class DataView {
    */
   public void setTxtStopFieldPASS() {
     txtStop.setText("PASS");
-    txtStop.setBackground(Color.GREEN);
+    txtStop.setBackground(new Color(0, 204, 51));
   }
   /**
    * 设置运行状态框为STOP
@@ -912,25 +965,46 @@ public class DataView {
     table.setValueAt("NG", i, 7);
     setTableCellRenderer();
   }
-  
-  public void setPieChart() {
-    menuPanel.remove(chartPanel);
-    pieChart = new PieChart(4, 2);
-    chartPanel = pieChart.getChartPanel();
-    chartPanel.setOpaque(false);
-    //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
-    chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
-    menuPanel.add(chartPanel);
+  /**
+   * 刷新饼图的方法
+   * @param ok
+   * @param ng
+   */
+  public void setPieChart(int ok, int ng) {
+    piePlot = pieChart.getPiePlot();
+    piePlot.setDataset(MyPieChart.getDataSet(ok, ng));
+    piePlot.setSectionPaint("良品", new Color(0, 204, 51));   
+    piePlot.setSectionPaint("不良", Color.RED);
   }
-  /*public void setChart(int ok, int ng) {
-    chartPanel = new PieChart(ok, ng).getChartPanel();
-    //ChartPanel chartPanel = new BarChart().getChartPanel();
-    chartPanel.setOpaque(false);
-    //chartPanel.setBounds(0, MH * 11 / 32 - 20, MW - 10, MH * 20 / 32);
-    chartPanel.setBounds(0, HEIGHT*9/72+5, MW - 10, HEIGHT*42/72);
-    menuPanel.add(chartPanel);
-  }*/
-
+  //往recordtddata表中插入当天测试数据
+  public void addRecord() {
+    LocalDate now = LocalDate.now();
+    String[] str = {"C211", totalCount+"", okCount+"", ngCount+"", timeCount+"", now.toString()};
+    try {
+      ECTESTSYSTools.deleterecord(now.toString(), "C211");
+      ECTESTSYSTools.addrecord(str);
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(null, e.getMessage());
+    } 
+  }
+  
+  public Recorddata getRecorddata() {
+    List<Recorddata> list = ECTESTSYSTools.getRecordtdData(LocalDate.now().toString(), "C211");
+    Recorddata rd = null;
+    for(Iterator<Recorddata> it = list.iterator(); it.hasNext();) {
+      rd = it.next();
+    }
+    return rd;    
+  }
+  public int getOkCount() {
+    return Integer.parseInt(getRecorddata().getRecordok());
+  }
+  public int getNgCount() {
+    return Integer.parseInt(getRecorddata().getRecordng());
+  }
+  public int getTotalCount() {
+    return Integer.parseInt(getRecorddata().getRecordsum());
+  }
   /**
    * 流程控制
    */
@@ -956,15 +1030,13 @@ public class DataView {
         setNgFieldCount();
         setTotalFieldCount();
         setTableCellRenderer();
-        setPieChart();
-        //setChart(okCount, ngCount);
+        addRecord();
       }
     }.start();
 
   }
   
   public void startTest_righiKey() {
-
     setTxtStopFieldRUN();
     setTtimeFieldCount();
     initTable();
@@ -985,8 +1057,7 @@ public class DataView {
         setOkFieldCount();
         setTotalFieldCount();
         setTableCellRenderer();
-        setPieChart();
-        //setChart(okCount, ngCount);
+        addRecord();
       }
     }.start();
 

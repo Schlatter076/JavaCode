@@ -85,14 +85,34 @@ public class ECTESTSYSTools {
     return new DBHelper().AddU(sql, null);
   }
   
-  
+  public static List<Recorddata> getRecordtdData() {
+    List<Recorddata> list = new ArrayList<Recorddata>();
+    try {
+      DBHelper db = new DBHelper();
+      String sql = "select * from recordtd";
+      ResultSet res = db.Search(sql, null);
+      while(res.next()) {
+        String recordname = res.getString(1);
+        String recordsum = res.getString(2);
+        String recordok = res.getString(3);
+        String recordng = res.getString(4);
+        String recordts = res.getString(5);
+        String recordtime = res.getString(6);
+        
+        list.add(new Recorddata(recordname, recordsum, recordok, recordng, recordts, recordtime)); 
+      }
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+    return list;    
+  }
   /**
    * 获取recordtd表中指定recordtime和recordname列
    * @param rtime
    * @param rname
    * @return
    */
-  public static List<Recorddata> getRecordtdDate(String rtime, String rname) {
+  public static List<Recorddata> getRecordtdData(String rtime, String rname) {
     List<Recorddata> list = new ArrayList<Recorddata>();
     try {
       DBHelper db = new DBHelper();

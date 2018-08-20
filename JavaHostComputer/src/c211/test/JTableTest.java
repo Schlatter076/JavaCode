@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -45,7 +46,9 @@ public class JTableTest extends JFrame {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
         int row, int column) {
-      // TODO Auto-generated method stub
+      
+      super.setHorizontalAlignment(JLabel.CENTER); // 该列居中显示
+      
       Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
       // 隔行换色
       // if(row%2 ==0){

@@ -68,6 +68,13 @@ public class SignIn {
    */
   private void initialize() {
     signInFrame = new JFrame();
+    signInFrame.addKeyListener(new KeyAdapter() {
+      @Override
+      public void keyPressed(KeyEvent e) {
+        if(e.getKeyChar() == KeyEvent.VK_ENTER)
+          getSignInEvent();
+      }
+    });
     signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     signInFrame.setFont(new Font("SimSun-ExtB", Font.PLAIN, 12));
     signInFrame.setTitle("\u767B\u5F55");
@@ -97,6 +104,7 @@ public class SignIn {
     signInFrame.getContentPane().add(productLabel);
     
     addProductButt = new JButton("\u6DFB\u52A0\u4EA7\u54C1\u578B\u53F7");
+    addProductButt.setBackground(new Color(224, 255, 255));
     addProductButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
@@ -114,9 +122,13 @@ public class SignIn {
     
   //获取用户名和密码
     passwordField = new JPasswordField();  //新建密码区域
+    //passwordField.setRequestFocusEnabled(true);
+    //passwordField.requestFocus(true);
     commom = UserTools.getUserByName("commom");
     admin = UserTools.getUserByName("admin");
     idField = new JComboBox<String>();
+    idField.setFont(new Font("等线", Font.PLAIN, 16));
+    idField.setBackground(new Color(255, 250, 250));
     idField.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if(!idField.getEditor().getItem().equals(commom.getUsername()))
@@ -143,20 +155,8 @@ public class SignIn {
       public void keyPressed(KeyEvent e) {
         //监听Enter键
         if(e.getKeyChar() == KeyEvent.VK_ENTER ) {
-          boolean comUser = idField.getEditor().getItem().equals(commom.getUsername());
-          //char[] 转换成String的方法:String str = String.valueOf(char[] ch)
-          boolean comPwd = String.valueOf(passwordField.getPassword()).equals(commom.getPassword());
-          boolean adminUser = idField.getEditor().getItem().equals(admin.getUsername());
-          boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
-          //判断用户名和密码是否和数据库中保存的一致
-          if((comUser && comPwd) || (adminUser && adminPwd)) {
-            signInFrame.dispose();
-            //signInFrame.setVisible(false);
-            DataView.getDataView(idField.getEditor().getItem().toString());
-            //DataView.main(null);
-          }
-          else
-            JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
+          //getSignInEvent();
+          signInButt.doClick();
         }  
       }
     });
@@ -166,36 +166,30 @@ public class SignIn {
     passwordField.setColumns(10);
     passwordField.setEchoChar('*');
     passwordField.setBounds(34, 181, 362, 27);
-    passwordField.setFont(new Font("等线", Font.BOLD, 14));
+    passwordField.setFont(new Font("等线", Font.BOLD, 16));
     signInFrame.getContentPane().add(passwordField);
     
     signInButt = new JButton("\u7528\u6237\u767B\u5F55");
-    signInButt.addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        boolean comUser = idField.getEditor().getItem().equals(commom.getUsername());
-        //char[] 转换成String的方法:String str = String.valueOf(char[] ch)
-        boolean comPwd = String.valueOf(passwordField.getPassword()).equals(commom.getPassword());
-        boolean adminUser = idField.getEditor().getItem().equals(admin.getUsername());
-        boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
-        //判断用户名和密码是否和数据库中保存的一致
-        if((comUser && comPwd) || (adminUser && adminPwd)) {
-          signInFrame.dispose();
-          //signInFrame.setVisible(false);
-          DataView.getDataView(idField.getEditor().getItem().toString());
-          //DataView.main(null);
-        }
-        else
-          JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
+    signInButt.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        getSignInEvent();
       }
     });
+    /*signInButt.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        getSignInEvent();
+      }
+    });*/
+    //signInButt.requestFocus();
     signInButt.setBounds(192, 229, 204, 40);
     signInButt.setForeground(UIManager.getColor("ComboBox.foreground"));
     signInButt.setFont(new Font("等线", Font.BOLD, 16));
-    signInButt.setBackground(UIManager.getColor("Button.background"));
+    signInButt.setBackground(new Color(224, 255, 255));
     signInFrame.getContentPane().add(signInButt);
     
     exitButt = new JButton("\u9000\u51FA\u7CFB\u7EDF");
+    exitButt.setBackground(new Color(224, 255, 255));
     exitButt.setForeground(UIManager.getColor("List.dropLineColor"));
     exitButt.setBounds(34, 229, 112, 40);
     exitButt.addMouseListener(new MouseAdapter() {
@@ -209,6 +203,25 @@ public class SignIn {
     exitButt.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(exitButt);
     
+  }
+  /**
+   * 登录事件
+   */
+  public void getSignInEvent() {
+    boolean comUser = idField.getEditor().getItem().equals(commom.getUsername());
+    //char[] 转换成String的方法:String str = String.valueOf(char[] ch)
+    boolean comPwd = String.valueOf(passwordField.getPassword()).equals(commom.getPassword());
+    boolean adminUser = idField.getEditor().getItem().equals(admin.getUsername());
+    boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
+    //判断用户名和密码是否和数据库中保存的一致
+    if((comUser && comPwd) || (adminUser && adminPwd)) {
+      signInFrame.dispose();
+      //signInFrame.setVisible(false);
+      DataView.getDataView(idField.getEditor().getItem().toString());
+      //DataView.main(null);
+    }
+    else
+      JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
   }
   
 }

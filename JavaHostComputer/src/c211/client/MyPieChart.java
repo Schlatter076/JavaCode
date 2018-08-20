@@ -1,4 +1,4 @@
-package c211.test;
+package c211.client;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -12,14 +12,13 @@ import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 
-public class PieChart {
+public class MyPieChart {
   private ChartPanel frame1;
   private DefaultPieDataset data;
   private JFreeChart chart;
   private PiePlot piePlot;
-
-  public PieChart(int ok, int ng ) {
-    
+  
+  public MyPieChart(int ok, int ng) {
     data = getDataSet(ok, ng);
     chart = ChartFactory.createPieChart3D(null, data, true, true, false); //第一个参数为标题，这里我不要了
     /////////////////////////////////
@@ -46,8 +45,6 @@ public class PieChart {
     //chart.getTitle().setFont(new Font("等线", Font.PLAIN, 24));// 设置标题字体
     //chart.getTitle().setBackgroundPaint(Color.RED);
     
-    //PiePlot piePlot = (PiePlot) chart.getPlot();// 获取图表区域对象
-    
     //背景色　透明度     
     piePlot.setBackgroundAlpha(0.0f);  
     //piePlot.setBackgroundPaint(null);
@@ -55,9 +52,7 @@ public class PieChart {
     piePlot.setForegroundAlpha(1.0f);
     //piePlot.setLabelLinksVisible(true);
     
-    //piePlot.setBackgroundImage(Toolkit.getDefaultToolkit().getImage("src/run.jpg"));
-    
-    
+    //piePlot.setBackgroundImage(Toolkit.getDefaultToolkit().getImage("src/run.jpg"));  //替换背景
     
     piePlot.setLabelFont(new Font("等线", Font.PLAIN, 16));// 解决乱码
     piePlot.setLabelBackgroundPaint(Color.ORANGE);
@@ -65,23 +60,20 @@ public class PieChart {
     chart.getLegend().setItemFont(new Font("黑体", Font.PLAIN, 14));
     //chart.getLegend().setBackgroundPaint(null); //图最下面的标识设置透明
   }
-
   public static DefaultPieDataset getDataSet(int ok, int ng) {
     DefaultPieDataset dataset = new DefaultPieDataset();
     dataset.setValue("不良", ng);
     dataset.setValue("良品", ok);
     return dataset;
   }
-
   public ChartPanel getChartPanel() {
     return frame1;
   }
-  
   public JFreeChart getJFreeChart() {
     return chart;
   }
   public PiePlot getPiePlot() {
     return piePlot;
   }
-  
+
 }
