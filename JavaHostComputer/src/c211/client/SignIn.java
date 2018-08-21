@@ -6,6 +6,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+
+import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
@@ -20,6 +22,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JComboBox;
 import javax.swing.SwingConstants;
 import java.awt.event.ActionListener;
+import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -38,9 +41,10 @@ public class SignIn {
   private JButton exitButt;
   private User commom;
   private User admin;
-  
+
   /**
    * 主方法，运行登录界面
+   * 
    * @param args
    */
   public static void main(String[] args) {
@@ -55,7 +59,7 @@ public class SignIn {
       }
     });
   }
-  
+
   /**
    * 构造器
    */
@@ -68,13 +72,6 @@ public class SignIn {
    */
   private void initialize() {
     signInFrame = new JFrame();
-    signInFrame.addKeyListener(new KeyAdapter() {
-      @Override
-      public void keyPressed(KeyEvent e) {
-        if(e.getKeyChar() == KeyEvent.VK_ENTER)
-          getSignInEvent();
-      }
-    });
     signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     signInFrame.setFont(new Font("SimSun-ExtB", Font.PLAIN, 12));
     signInFrame.setTitle("\u767B\u5F55");
@@ -83,6 +80,18 @@ public class SignIn {
     signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
     
     Toolkit tk = Toolkit.getDefaultToolkit();
+    //全局添加键盘监听事件
+    tk.addAWTEventListener(new AWTEventListener() {
+      
+      @Override
+      public void eventDispatched(AWTEvent event) {
+        //当有键按下，且为ENTER键时，点击登录按钮
+        if(((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_ENTER) {
+          signInButt.doClick();
+        }
+      }
+    }, AWTEvent.KEY_EVENT_MASK);
+    
     Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
     signInFrame.setIconImage(img);
     signInFrame.getContentPane().setLayout(null);
@@ -204,24 +213,24 @@ public class SignIn {
     signInFrame.getContentPane().add(exitButt);
     
   }
+
   /**
    * 登录事件
    */
   public void getSignInEvent() {
     boolean comUser = idField.getEditor().getItem().equals(commom.getUsername());
-    //char[] 转换成String的方法:String str = String.valueOf(char[] ch)
+    // char[] 转换成String的方法:String str = String.valueOf(char[] ch)
     boolean comPwd = String.valueOf(passwordField.getPassword()).equals(commom.getPassword());
     boolean adminUser = idField.getEditor().getItem().equals(admin.getUsername());
     boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
-    //判断用户名和密码是否和数据库中保存的一致
-    if((comUser && comPwd) || (adminUser && adminPwd)) {
+    // 判断用户名和密码是否和数据库中保存的一致
+    if ((comUser && comPwd) || (adminUser && adminPwd)) {
       signInFrame.dispose();
-      //signInFrame.setVisible(false);
+      // signInFrame.setVisible(false);
       DataView.getDataView(idField.getEditor().getItem().toString());
-      //DataView.main(null);
-    }
-    else
+      // DataView.main(null);
+    } else
       JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
   }
-  
+
 }
