@@ -72,7 +72,6 @@ public class SignIn {
    */
   private void initialize() {
     signInFrame = new JFrame();
-    signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     signInFrame.setFont(new Font("SimSun-ExtB", Font.PLAIN, 12));
     signInFrame.setTitle("\u767B\u5F55");
     signInFrame.setBounds(100, 100, 438, 326);

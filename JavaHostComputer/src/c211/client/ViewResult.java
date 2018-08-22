@@ -26,15 +26,10 @@ import c211.db.Recorddata;
 
 import java.awt.Color;
 import java.awt.Component;
-
 import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.time.LocalDate;
 
 public class ViewResult {
 
@@ -79,7 +74,6 @@ public class ViewResult {
   public ViewResult() {
     initialize();
   }
-
   /**
    * Initialize the contents of the frame.
    */
@@ -87,10 +81,9 @@ public class ViewResult {
     frame = new JFrame();
     frame.setTitle("查看测试结果");
     frame.setBounds(100, 100, 774, 532);
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setResizable(false); // 窗口大小不可改
     // frame.setUndecorated(true);
-    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     Toolkit tk = Toolkit.getDefaultToolkit();
     Image img = tk.getImage("src/Kyokuto.png"); // 替换窗口的咖啡图标
     frame.setIconImage(img);
@@ -162,15 +155,20 @@ public class ViewResult {
     frame.getContentPane().add(checkButt);
 
     exitButt = new JButton("退出");
+    exitButt.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        frame.dispose();
+      }
+    });
     exitButt.setBackground(new Color(224, 255, 255));
     exitButt.setFont(new Font("等线", Font.PLAIN, 14));
     exitButt.setBounds(655, 9, 93, 23);
-    exitButt.addMouseListener(new MouseAdapter() {
+    /*exitButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
         frame.dispose();
       }
-    });
+    });*/
     frame.getContentPane().add(exitButt);
   }
 

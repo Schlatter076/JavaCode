@@ -158,13 +158,13 @@ public class USBHelperTool {
       public void mouseClicked(MouseEvent e) {
         try {
           USBHelper.setUpClass();
+          usb.setLogFile();
+          usb.getVisaResourceManagerHandle();
+          usb.openInstrument(nameField.getText());
+          usb.setTimeout();
         } catch(Exception ex) {
           JOptionPane.showMessageDialog(null, "USB打开失败，请检查后重试！", "错误", JOptionPane.ERROR_MESSAGE);
         }
-        usb.setLogFile();
-        usb.getVisaResourceManagerHandle();
-        usb.openInstrument(nameField.getText());
-        usb.setTimeout();
         checkButt.setEnabled(true);
         //readButt.setEnabled(true);
         writeButt.setEnabled(true);

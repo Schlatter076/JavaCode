@@ -33,12 +33,8 @@ public class USBHelper {
   static final String LOG_PATH = "log/c211log.txt";
   
   static File logFile; 
-  /**
-   * 测试用方法
-   * @param args
-   * @throws Exception
-   */
-  public static void main(String[] args) throws Exception {
+  
+  /*public static void main(String[] args) throws Exception {
     setUpClass();
     USBHelper me = new USBHelper();
     me.setLogFile();
@@ -50,7 +46,7 @@ public class USBHelper {
     System.out.println(Double.parseDouble(me.visaRead()));
     me.visaClear();
     
-  }
+  }*/
   /**
    * 获取默认资源
    * @throws Exception

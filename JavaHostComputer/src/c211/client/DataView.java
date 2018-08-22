@@ -4,7 +4,9 @@ import c211.db.*;
 import c211.serial.*;
 import c211.serialException.NoSuchPort;
 import c211.serialException.NotASerialPort;
+import c211.serialException.OutputStreamCloseFail;
 import c211.serialException.PortInUse;
+import c211.serialException.SendToPortFail;
 import c211.serialException.SerialPortParamFail;
 
 import gnu.io.SerialPort;
@@ -13,20 +15,26 @@ import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
+import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JTextField;
 import java.awt.Font;
+import java.awt.Image;
+
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.PiePlot;
+
+import Automation.BDaq.ErrorCode;
+import Automation.BDaq.InstantDoCtrl;
+
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JMenuBar;
@@ -34,11 +42,13 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -120,6 +130,16 @@ public class DataView {
   private JTable table;
   private MyTableCellRenderrer myTableCellRenderrer = null;
 
+  private USBHelper usb = new USBHelper();
+  private InstantDoCtrl instantDoCtrl = new InstantDoCtrl();
+  private byte pciState = 0x00;
+//  private boolean s1ok = false;
+//  private boolean s2ok = false;
+//  private boolean s3ok = false;
+//  private boolean s4ok = false;
+//  private boolean s7ok = false;
+//  private boolean s8ok = false;
+
   /**
    * 提供实例化本类方法
    * 
@@ -180,7 +200,6 @@ public class DataView {
 
     dataFrame.setResizable(false); // 窗口大小不可改
     dataFrame.setUndecorated(true);
-
     // 更换背景图片
     // ImageIcon img_1 = new ImageIcon("src/back.jpg");
     // ImageIcon img_1 = new ImageIcon("src/img11.jpg");
@@ -193,10 +212,22 @@ public class DataView {
     ((JPanel) dataFrame.getContentPane()).setOpaque(false);
 
     // 替换窗口的咖啡图标
-    // Toolkit tk = Toolkit.getDefaultToolkit();
-    // Image img = tk.getImage("src/Kyokuto.png");
-    dataFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("src/Kyokuto.png"));
-    dataFrame.getContentPane().setLayout(null);
+    Toolkit tk = Toolkit.getDefaultToolkit();
+    // 全局添加键盘监听事件
+    tk.addAWTEventListener(new AWTEventListener() {
+
+      @Override
+      public void eventDispatched(AWTEvent event) {
+        // 当有键按下，且为ENTER键时，点击登录按钮
+        if (((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_F) {
+          initCountAndPieChart();
+          ECTESTSYSTools.recordtdDataOutToExcel();
+          // JOptionPane.showMessageDialog(null, "刷新页面");
+        }
+      }
+    }, AWTEvent.KEY_EVENT_MASK);
+    Image img = tk.getImage("src/Kyokuto.png");
+    dataFrame.setIconImage(img);
     dataFrame.getContentPane().setLayout(null);
 
     headTxtField = new JTextField();
@@ -375,7 +406,7 @@ public class DataView {
       public void actionPerformed(ActionEvent e) {
         if (userName.equals("admin")) {
           ViewResult.getViewResult();
-          //initCountAndPieChart();
+          // initCountAndPieChart();
         } else
           JOptionPane.showMessageDialog(null, "你没有权限操作", "警告", JOptionPane.WARNING_MESSAGE);
       }
@@ -821,6 +852,28 @@ public class DataView {
   }
 
   /**
+   * 设置测试值
+   * 
+   * @param row
+   *          行数
+   * @param value
+   *          值
+   */
+  public void setValueAt(int row, double value) {
+    table.setValueAt(value, row, 5);
+  }
+
+  /**
+   * 重载测试值设置方法
+   * 
+   * @param row
+   * @param value
+   */
+  public void setValueAt(int row, String value) {
+    table.setValueAt(value, row, 5);
+  }
+
+  /**
    * 获取表中row(1~14)行的测试值
    * 
    * @param row
@@ -1001,44 +1054,61 @@ public class DataView {
       JOptionPane.showMessageDialog(null, "未发现串口1");
       COM1Butt.setBackground(Color.BLACK);
     } else {
+      COM1Write(new byte[0xAA]);
       COM1Butt.setBackground(Color.RED);
     }
-    /*
-     * if (!port.contains("COM2")) { JOptionPane.showMessageDialog(null, "未发现串口2");
-     * COM2Butt.setBackground(Color.BLACK); } else {
-     * COM2Butt.setBackground(Color.RED); }
-     */
+    if (!port.contains("COM2")) {
+      JOptionPane.showMessageDialog(null, "未发现串口2");
+      COM2Butt.setBackground(Color.BLACK);
+    } else {
+      COM2Write(new byte[0xBB]);
+      COM2Butt.setBackground(Color.RED);
+    }
+
     if (!port.contains("COM3")) {
       JOptionPane.showMessageDialog(null, "未发现串口3");
       COM3Butt.setBackground(Color.BLACK);
     } else {
+      COM3Write(new byte[0xAA]);
       COM3Butt.setBackground(Color.RED);
     }
     if (!port.contains("COM4")) {
       JOptionPane.showMessageDialog(null, "未发现串口4");
       COM4Butt.setBackground(Color.BLACK);
     } else {
+      COM4Write(new byte[0xBB]);
       COM4Butt.setBackground(Color.RED);
     }
-    /*
-     * if (!port.contains("COM5")) { JOptionPane.showMessageDialog(null, "未发现串口5");
-     * COM5Butt.setBackground(Color.BLACK); } else {
-     * COM5Butt.setBackground(Color.RED); } if (!port.contains("COM6")) {
-     * JOptionPane.showMessageDialog(null, "未发现串口6");
-     * COM6Butt.setBackground(Color.BLACK); } else {
-     * COM6Butt.setBackground(Color.RED); }
-     */
+//    if (!port.contains("COM5")) {
+//      JOptionPane.showMessageDialog(null, "未发现串口5");
+//      COM5Butt.setBackground(Color.BLACK);
+//    } else {
+//      COM5Butt.setBackground(Color.RED);
+//    }
+//    if (!port.contains("COM6")) {
+//      JOptionPane.showMessageDialog(null, "未发现串口6");
+//      COM6Butt.setBackground(Color.BLACK);
+//    } else {
+//      COM6Butt.setBackground(Color.RED);
+//    }
     if (!port.contains("COM7")) {
       JOptionPane.showMessageDialog(null, "未发现串口7");
       COM7Butt.setBackground(Color.BLACK);
     } else {
+      COM7Write(new byte[0xAA]);
       COM7Butt.setBackground(Color.RED);
     }
     if (!port.contains("COM8")) {
       JOptionPane.showMessageDialog(null, "未发现串口8");
       COM8Butt.setBackground(Color.BLACK);
     } else {
+      COM8Write(new byte[0xBB]);
       COM8Butt.setBackground(Color.RED);
+    }
+    if(port.contains("COM1") && port.contains("COM2") && port.contains("COM3") && port.contains("COM4")
+        && port.contains("COM7") && port.contains("COM8")) {
+      
+      txtStop.setText("READY");
     }
   }
 
@@ -1145,11 +1215,10 @@ public class DataView {
    * table渲染色，测试结果为"PASS"则设为绿色，"NG"为红色
    */
   public void setTableCellRenderer() {
-    if(myTableCellRenderrer == null) {
+    if (myTableCellRenderrer == null) {
       myTableCellRenderrer = new MyTableCellRenderrer();
       table.getColumnModel().getColumn(7).setCellRenderer(myTableCellRenderrer);
-    }
-    else
+    } else
       table.getColumnModel().getColumn(7).setCellRenderer(myTableCellRenderrer);
   }
 
@@ -1207,6 +1276,7 @@ public class DataView {
   public void setTableTestResultNG(int i) {
     table.setValueAt("NG", i, 7);
     setTableCellRenderer();
+    PLCWarmming();
   }
 
   /**
@@ -1237,6 +1307,11 @@ public class DataView {
     }
   }
 
+  /**
+   * 获取数据库里当天存的数据
+   * 
+   * @return
+   */
   public Recorddata getRecorddata() {
     List<Recorddata> list = ECTESTSYSTools.getRecordtdData(LocalDate.now().toString(), "C211");
     Recorddata rd = null;
@@ -1257,6 +1332,316 @@ public class DataView {
   public int getTotalCount() {
     return Integer.parseInt(getRecorddata().getRecordsum());
   }
+
+  /**
+   * 发送不良报警给PLC
+   */
+  public void PLCWarmming() {
+    // 点测复选框没有选中
+    if (!spotTestCbox.isSelected()) {
+      pciState = (byte) (pciState | 0x01);
+      sendMesToPLCByPCI(0, pciState);
+    }
+  }
+
+  /**
+   * 通过PCI向PLC发送数据
+   * 
+   * @param channel
+   * @param state
+   */
+  public void sendMesToPLCByPCI(int channel, byte state) {
+    ErrorCode err = ErrorCode.Success;
+    err = instantDoCtrl.Write(channel, state);
+    if (err != ErrorCode.Success) {
+      handleError(err);
+    }
+  }
+
+  /**
+   * 错误信息处理
+   * 
+   * @param err
+   *          ErrorCode
+   */
+  public void handleError(ErrorCode err) {
+    if (err != ErrorCode.Success) {
+      JOptionPane.showMessageDialog(null, "出错了，错误是：" + err.toString());
+    }
+  }
+
+  /**
+   * 打开万用表
+   */
+  public void openMultimeter() {
+    try {
+      USBHelper.setUpClass();
+      String ResourceName = "USB0::0x1AB1::0x09C4::DM3R194802656::INSTR";
+      usb.setLogFile();
+      usb.getVisaResourceManagerHandle();
+      usb.openInstrument(ResourceName);
+      usb.setTimeout();
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(null, "未发现万用表:" + e.getMessage());
+    }
+  }
+
+  /**
+   * 清除USB资源
+   */
+  public void clearResource() {
+    usb.visaClear();
+  }
+
+  /**
+   * 打开两线测电阻模式
+   */
+  public void openTwoLineR_FUC() {
+    usb.visaWrite(":RATE:RESistance F");
+    usb.visaWrite(":FUNCtion:RESistance");
+  }
+
+  /**
+   * 打开直流电压测试模式
+   */
+  public void openDCvoltage_FUC() {
+    usb.visaWrite(":FUNCtion:VOLTage:DC");
+  }
+
+  /**
+   * 设置电阻测试量程
+   * 
+   * @param range
+   *          量程档位
+   */
+  public void setR_range(String range) {
+    usb.visaWrite(":RATE:RESistance F");
+    usb.visaWrite(":MEASure:RESistance " + range); // 0 200欧姆 1 2k欧姆 2 20k欧姆
+  }
+
+  /**
+   * 设置电压档量程
+   * 
+   * @param range
+   *          档位
+   */
+  public void setV_range(String range) {
+    usb.visaWrite(":MEASure:VOLTage:DC " + range); // 0 200mV 1 2V 2 20V
+  }
+
+  /**
+   * 设置测试速率
+   * 
+   * @param rate
+   */
+  public void setRate(String rate) {
+    usb.visaWrite(rate);
+  }
+
+  /**
+   * 回读电阻值，填入表中测试值，并判断测试结果是否PASS
+   * 
+   * @param row
+   *          行数
+   */
+  public void R_measure(int row) {
+    usb.visaWrite(":MEASure:RESistance?");
+    String value = usb.visaRead();
+    double valuePlus = Double.parseDouble(value) - 0.9d; // 修正回读值
+    setValueAt(row, valuePlus);
+    setResValueAtRow(row);
+  }
+
+  /**
+   * 回读电压值，填入表中测试值，并判断测试结果是否PASS
+   * 
+   * @param row
+   *          行数
+   */
+  public void V_measure(int row) {
+    usb.visaWrite(":MEASure:VOLtage?");
+    String value = usb.visaRead();
+    setValueAt(row, value);
+    setResValueAtRow(row);
+  }
+
+  /**
+   * 按下SET按钮，获取1脚和4脚之间的电阻值
+   */
+  public void getShortCircuitResValue() {
+    openMultimeter();
+    openTwoLineR_FUC();
+    setR_range("2");
+    R_measure(1);
+    clearResource();
+  }
+
+  /**
+   * 按下SET按钮，获取1脚电压值
+   */
+  public void getDCVolValue() {
+    openMultimeter();
+    openDCvoltage_FUC();
+    setV_range("2");
+    V_measure(2);
+    clearResource();
+  }
+
+  /**
+   * 如果捺印复选框被选中，则发送捺印请求，否则不钠印
+   */
+  public void ifProductPrint() {
+    if (nayinCbox.isSelected()) {
+      pciState = (byte) (pciState & 0xF7);
+      sendMesToPLCByPCI(0, pciState);
+    } else {
+      pciState = (byte) (pciState | 0x08);
+      sendMesToPLCByPCI(0, pciState);
+    }
+  }
+  /**
+   * 串口1发送数据
+   * @param bytes 待发送的字节数组
+   */
+  public void COM1Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM1")) {
+      try {
+        SerialPort COM1 = SerialPortTool.getPort(1);
+        SerialPortTool.write(COM1, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口1可能被占用");
+  }
+  public void COM2Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM2")) {
+      try {
+        SerialPort COM2 = SerialPortTool.getPort(2);
+        SerialPortTool.write(COM2, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口2可能被占用");
+  }
+  public void COM3Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM3")) {
+      try {
+        SerialPort COM3 = SerialPortTool.getPort(3);
+        SerialPortTool.write(COM3, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口3可能被占用");
+  }
+  public void COM4Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM4")) {
+      try {
+        SerialPort COM4 = SerialPortTool.getPort(4);
+        SerialPortTool.write(COM4, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口4可能被占用");
+  }
+  public void COM7Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM7")) {
+      try {
+        SerialPort COM7 = SerialPortTool.getPort(5);
+        SerialPortTool.write(COM7, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口7可能被占用");
+  }
+  public void COM8Write(byte[] bytes) {
+    ArrayList<String> port = SerialPortTool.findPort();
+    if(port.contains("COM8")) {
+      try {
+        SerialPort COM8 = SerialPortTool.getPort(6);
+        SerialPortTool.write(COM8, bytes);
+      } catch (SerialPortParamFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NotASerialPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (NoSuchPort e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (SendToPortFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      } catch (OutputStreamCloseFail e) {
+        JOptionPane.showMessageDialog(null, e.toString());
+      }
+    }
+    else
+      JOptionPane.showMessageDialog(null, "未发现串口，串口8可能被占用");
+  }
+  
 
   /**
    * 流程控制
@@ -1283,6 +1668,7 @@ public class DataView {
               JOptionPane.showMessageDialog(null, "不用捺印@_@");
 
             setNgFieldCount();
+            // System.out.println(nayinCbox.isSelected());
           }
         } catch (InterruptedException e) {
           e.printStackTrace();
