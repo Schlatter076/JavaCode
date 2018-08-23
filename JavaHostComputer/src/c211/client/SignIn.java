@@ -41,6 +41,7 @@ public class SignIn {
   private JButton exitButt;
   private User commom;
   private User admin;
+  private boolean isDataView = false;
 
   /**
    * 主方法，运行登录界面
@@ -84,9 +85,11 @@ public class SignIn {
       
       @Override
       public void eventDispatched(AWTEvent event) {
+        if(!isDataView) {
         //当有键按下，且为ENTER键时，点击登录按钮
-        if(((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_ENTER) {
-          signInButt.doClick();
+          if(((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_ENTER) {
+            signInButt.doClick();
+          }
         }
       }
     }, AWTEvent.KEY_EVENT_MASK);
@@ -183,13 +186,6 @@ public class SignIn {
         getSignInEvent();
       }
     });
-    /*signInButt.addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        getSignInEvent();
-      }
-    });*/
-    //signInButt.requestFocus();
     signInButt.setBounds(192, 229, 204, 40);
     signInButt.setForeground(UIManager.getColor("ComboBox.foreground"));
     signInButt.setFont(new Font("等线", Font.BOLD, 16));
@@ -203,8 +199,6 @@ public class SignIn {
     exitButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        //int num = JOptionPane.showConfirmDialog(null, "确认退出？", "提示", JOptionPane.YES_NO_OPTION);
-        //if(num == JOptionPane.YES_OPTION)
           System.exit(0);
       }
     });
@@ -224,10 +218,9 @@ public class SignIn {
     boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
     // 判断用户名和密码是否和数据库中保存的一致
     if ((comUser && comPwd) || (adminUser && adminPwd)) {
+      isDataView = true;
       signInFrame.dispose();
-      // signInFrame.setVisible(false);
       DataView.getDataView(idField.getEditor().getItem().toString());
-      // DataView.main(null);
     } else
       JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
   }

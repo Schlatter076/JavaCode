@@ -169,9 +169,8 @@ public class SerialPortTool implements SerialPortEventListener {
    * @return 如果成功返回true
    */
   public static boolean write(SerialPort sPort, String command) {
-    SerialPort sp = sPort;
     try {
-      writer = new PrintWriter(new OutputStreamWriter(sp.getOutputStream(), "UTF-8"), true);
+      writer = new PrintWriter(new OutputStreamWriter(sPort.getOutputStream(), "UTF-8"), true);
       writer.println(command);
       return true;
     } catch (UnsupportedEncodingException e) {
