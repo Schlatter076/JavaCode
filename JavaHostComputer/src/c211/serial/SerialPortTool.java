@@ -2,6 +2,7 @@ package c211.serial;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,7 +32,7 @@ import c211.client.*;
 public class SerialPortTool implements SerialPortEventListener {
 
   private static SerialPortTool spTool = null;
-  DBHelper db = new DBHelper();
+  protected DBHelper db = new DBHelper();
   protected static BufferedReader reader;
   protected static PrintWriter writer;
   // protected static SerialPort port;
@@ -220,7 +221,46 @@ public class SerialPortTool implements SerialPortEventListener {
     getSerialPortTool().read(sPort, cback, Charset.forName("UTF-8"));
     return cback.getResult();
   }
+  /**
+   * 16进制的字符串表示转成字节数组
+   * 
+   * @param hexString
+   *          16进制格式的字符串
+   * @return 转换后的字节数组
+   **/
+  public static byte[] toByteArray(String hexString) {
 
+    hexString = hexString.replaceAll(" ", ""); // 去掉字符串中所有空格
+    hexString = hexString.toLowerCase();
+    int len = 0;
+    if(hexString.length() % 2 == 0) {
+      len = hexString.length() / 2;
+    }
+    else {
+      len = hexString.length() /2 + 1;
+    }
+    byte[] byteArray = new byte[len];
+    int k = 0;
+    for (int i = 0; i < byteArray.length; i++) {// 因为是16进制，最多只会占用4位，转换成字节需要两个16进制的字符，高位在先
+      byte high = (byte) (Character.digit(hexString.charAt(k), 16) & 0xff);
+      byte low = (byte) (Character.digit(hexString.charAt(k + 1), 16) & 0xff);
+      byteArray[i] = (byte)(high << 4 | low);
+      k += 2;
+    }
+    return byteArray;
+  }
+  public static String bytesToHex(byte[] bytes) {
+    StringBuffer sb = new StringBuffer();
+    for (int i = 0; i < bytes.length; i++) {
+      String hex = Integer.toHexString(bytes[i] & 0xFF);
+      if (hex.length() < 2) {
+        sb.append(0);
+      }
+      sb.append(hex);
+      sb.append(' ');
+    }
+    return sb.toString();
+  }
   /**
    * 往串口发送数据
    * 
@@ -236,13 +276,10 @@ public class SerialPortTool implements SerialPortEventListener {
   public static void write(SerialPort serialPort, byte[] order) throws SendToPortFail, OutputStreamCloseFail {
 
     OutputStream out = null;
-
     try {
-
       out = serialPort.getOutputStream();
       out.write(order);
       out.flush();
-
     } catch (IOException e) {
       throw new SendToPortFail();
     } finally {
@@ -272,12 +309,9 @@ public class SerialPortTool implements SerialPortEventListener {
   public static byte[] readByte(SerialPort serialPort) throws ReadDataFromSerialFail, InputStreamCloseFail {
     InputStream in = null;
     byte[] bytes = null;
-
     try {
-
       in = serialPort.getInputStream();
       int bufflenth = in.available(); // 获取buffer里的数据长度
-
       while (bufflenth != 0) {
         bytes = new byte[bufflenth]; // 初始化byte数组为buffer中数据的长度
         in.read(bytes);
@@ -297,6 +331,65 @@ public class SerialPortTool implements SerialPortEventListener {
 
     }
     return bytes;
+  }
+  /**
+   * 重载串口写操作
+   * @param port 串口对象
+   * @param datas 待发送字符数组
+   * @throws SendToPortFail
+   * @throws OutputStreamCloseFail
+   */
+  public static void write(SerialPort port, char[] datas) throws SendToPortFail, OutputStreamCloseFail {
+    BufferedWriter buffWriter = null;
+    try {
+      buffWriter = new BufferedWriter(new OutputStreamWriter(port.getOutputStream(), Charset.forName("UTF-8")));
+      buffWriter.write(datas);
+      buffWriter.flush();
+    } catch(IOException e) {
+      throw new SendToPortFail();
+    } finally {
+      try {
+        if(buffWriter != null) {
+          buffWriter.close();
+          buffWriter = null;
+        }
+      } catch(IOException e) {
+        throw new OutputStreamCloseFail();
+      }
+    }
+    
+  }
+  /**
+   * 从串口接收字符数组
+   * @param port 串口对象
+   * @return 字符数组
+   * @throws ReadDataFromSerialFail
+   * @throws InputStreamCloseFail
+   */
+  public static char[] readChar(SerialPort port) throws ReadDataFromSerialFail, InputStreamCloseFail {
+    BufferedReader buffReader = null;
+    char[] result = null;
+    try {
+      buffReader = new BufferedReader(new InputStreamReader(port.getInputStream(), Charset.forName("UTF-8")));
+      char[] temp = new char[1024];
+      int length = buffReader.read(temp); 
+      result = new char[length];
+      for(int i = 0; i < length; i++) {
+        result[i] = temp[i];
+      }
+      return result;
+    } catch(IOException e) {
+      throw new ReadDataFromSerialFail();
+    } finally {
+      try {
+        if(buffReader != null) {
+          buffReader.close();
+          buffReader = null;
+        }
+      } catch(IOException e) {
+        throw new InputStreamCloseFail();
+      }
+    }
   }
 
   @Override

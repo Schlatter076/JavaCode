@@ -1,7 +1,10 @@
 package c211.test;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
+
+import Automation.BDaq.ByteByRef;
 import c211.serial.SerialPortTool;
 import c211.serialException.InputStreamCloseFail;
 import c211.serialException.NoSuchPort;
@@ -18,7 +21,7 @@ public class MethodTest {
   static SerialPortTool portTool = SerialPortTool.getSerialPortTool();
 
   public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
-    StringBuilder strBuilder = new StringBuilder();
+    /*StringBuilder strBuilder = new StringBuilder();
     strBuilder.append("01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9");
     // strBuilder.delete(0, strBuilder.length());
     String builStr = strBuilder.toString();
@@ -29,7 +32,9 @@ public class MethodTest {
       System.out.print(b + " ");
     }
     System.out.println();
-    System.out.println(bytesToHex(builByte).toUpperCase());
+    System.out.println(bytesToHex(builByte).toUpperCase());*/
+    
+    
 
     ArrayList<String> port = SerialPortTool.findPort();
     for (Iterator<String> i = port.iterator(); i.hasNext();) {
@@ -52,13 +57,39 @@ public class MethodTest {
     } catch (OutputStreamCloseFail e) {
       e.printStackTrace();
     }
+    //System.out.println(SerialPortTool.read(COM1));
     SerialPortTool.closePort(COM1);
-    SerialPort COM4 = SerialPortTool.getPort("COM4", 9600, 8, 1, 0);
+    //char[] ch = {0xFF, 0x80, 0x60, 0xF3};
+    String str = "01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9";
+    byte[] strByte = toByteArray(str);
+    for(byte b: strByte) {
+      String s = String.format("%02x", b);
+      System.out.print(s + " ");
+      //System.out.print(Integer.toHexString(b) + " ");
+    }
+    System.out.println();
+    System.out.println(bytesToHex(strByte));
+    System.out.println(bytesToHex(bytes));
+    //String s1 = String.format("%1$tY-%1$tm-%1$te", new Date());
+    //System.out.println(s1);
+    byte[] ch = {0x01, 0x10, 0x00, 0x01, 0x00, 0x08, 0x10, 0x00, 0x60, 0x00, (byte) 0x80, 0x00, 0x76,
+        0x00, 0x67, 0x00, (byte) 0x81, 0x00, 0x68, 0x00, 0x66, 0x00, 0x62, 0x10, (byte) 0xB9};
+    for(byte b: ch) {
+      String s = String.format("%02x", b);
+      //System.out.print(Byte.parseByte(s) + " ");
+      System.out.print(s + " ");
+    }
+    System.out.println();
+    //System.out.println(Byte.parseByte(String.format("%02x", "b9")));
+    /*SerialPort COM4 = SerialPortTool.getPort("COM4", 19200, 8, 1, 2);
     try {
-      SerialPortTool.write(COM4, bytes);
+      SerialPortTool.write(COM4, ch);
+      Thread.sleep(500);
       byte[] comBytes = SerialPortTool.readByte(COM4);
-      for(byte b: comBytes) {
-        System.out.print(b + " ");
+      //System.out.print(String.copyValueOf(comBytes));
+      for(byte b: ch) {
+        String s = String.format("%x", b);
+        System.out.print(s + " ");
       }
     } catch (SendToPortFail e) {
       e.printStackTrace();
@@ -68,9 +99,11 @@ public class MethodTest {
       e.printStackTrace();
     } catch (InputStreamCloseFail e) {
       e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
     SerialPortTool.closePort(COM4);
-    
+    */
   }
 
   /**
@@ -84,13 +117,21 @@ public class MethodTest {
 
     hexString = hexString.replaceAll(" ", ""); // 去掉字符串中所有空格
     hexString = hexString.toLowerCase();
-    final byte[] byteArray = new byte[hexString.length() / 2];
+    int len = 0;
+    if(hexString.length() % 2 == 0) {
+      len = hexString.length() / 2;
+    }
+    else {
+      len = hexString.length() /2 + 1;
+    }
+    byte[] byteArray = new byte[len];
     int k = 0;
     for (int i = 0; i < byteArray.length; i++) {// 因为是16进制，最多只会占用4位，转换成字节需要两个16进制的字符，高位在先
       byte high = (byte) (Character.digit(hexString.charAt(k), 16) & 0xff);
       byte low = (byte) (Character.digit(hexString.charAt(k + 1), 16) & 0xff);
-      String str = Integer.toHexString((high << 4 | low));
-      byteArray[i] = Byte.parseByte(str);
+      byteArray[i] = (byte)(high << 4 | low);
+      //String str = Integer.toHexString((high << 4 | low)).format("0x" + "[0-9A-Fa-f]{2}", byteArray);
+      //byteArray[i] = Byte.parseByte(str);
       k += 2;
     }
 
@@ -105,6 +146,7 @@ public class MethodTest {
         sb.append(0);
       }
       sb.append(hex);
+      sb.append(' ');
     }
     return sb.toString();
   }
