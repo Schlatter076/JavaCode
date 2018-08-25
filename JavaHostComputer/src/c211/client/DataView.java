@@ -14,9 +14,10 @@ import c211.serialException.TooManyListeners;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
-
 import java.awt.EventQueue;
 import java.awt.Toolkit;
+
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -26,9 +27,12 @@ import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JTextField;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Point;
 
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -36,7 +40,6 @@ import javax.swing.table.TableColumn;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.PiePlot;
 
-import Automation.BDaq.ByteByRef;
 import Automation.BDaq.ErrorCode;
 import Automation.BDaq.InstantDiCtrl;
 import Automation.BDaq.InstantDoCtrl;
@@ -64,6 +67,9 @@ import javax.swing.JButton;
 import javax.swing.JProgressBar;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 
@@ -142,13 +148,55 @@ public class DataView {
   private USBHelper usb = new USBHelper();
   private InstantDoCtrl instantDoCtrl = new InstantDoCtrl();
   private InstantDiCtrl instantDiCtrl = new InstantDiCtrl();
-  private int portCount;
+  private int portCount = 1;
   private byte[] portData;
   private byte pciState = 0x00;
   private List<Integer> mydatap01 = new ArrayList<Integer>();
   private List<Integer> mydatap02 = new ArrayList<Integer>();
   private List<Integer> mydatap03 = new ArrayList<Integer>();
   private int dataCountOfLi = 1000;
+  private BufferedImage image;  //相当于c#Bitmap
+  private Point point;  //c# Point F
+  private Graphics graphics; //c#  Graphics
+  private JLabel picLabel; // c# pictureBox
+  private ImageIcon picImage; //c#  pictureBox.image
+  private double xcResult1 = 0.0d;
+  private double xcResult2 = 0.0d;
+  private double xcResult3 = 0.0d;
+  private double V_result = 0.0d;
+  private double R_result= 0.0d;
+  private int PLCtestTimes = 0;
+  private int R_testTimes = 0;
+  private int timeInterValRSTjueyuan = 0;
+  private List<Double> R_TEST = new ArrayList<Double>();
+  private Timer timer1;
+  private Timer timer2;
+  private Timer timer3;
+  private Timer timer4;
+  private boolean printBUT1_LL = false;
+  private boolean printBut2_LL = false;
+  private boolean printBut3_LL = false;
+  private boolean PCinit = false;
+  private boolean BUT1_SET = false;
+  private boolean BUT2_SET = false;
+  private boolean BUT3_SET = false;
+  private boolean ALLOWTEST_R1 = false;
+  private boolean ALLOWTEST_R2 = false;
+  private boolean ALLOWTEST_R3 = false;
+  private String JUETYANNUM = "";
+  private String testState = "STOP";
+  private boolean ALLDIALOGISSHOW = false;
+  private int s4sendtimes = 0;
+  private boolean boolXC1 = false;
+  private boolean boolXC2 = false;
+  private boolean boolXC3 = false;
+  private boolean jueyuanTestBool01 = false;
+  private boolean jueyuanTestBool02 = false;
+  private boolean ALLjueyuanTestBool01 = false;
+  private boolean ALLjueyuanTestBool02 = false;
+  private boolean IFNGBOOL = false;
+  private boolean outExcel;
+  
 
   protected SerialPort COM1;
   protected SerialPort COM2;
@@ -161,11 +209,8 @@ public class DataView {
   private boolean s3ok = false;
   private boolean s4ok = false;
   private boolean s7ok = false;
-  private boolean s8ok = false;
-  private double xcResult1 = 0.0d;
-  private double xcResult2 = 0.0d;
-  private double xcResult3 = 0.0d;
-
+  private boolean s8ok = false; 
+  
   /**
    * 提供实例化本类方法
    * 
@@ -178,10 +223,7 @@ public class DataView {
         try {
           DataView window = new DataView(user);
           window.dataFrame.setVisible(true);
-          window.initPort();
-          window.initCountAndPieChart();
-          window.ifProductPrint();
-          window.jueyuanTestReset();
+          window.initLoad();
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -195,14 +237,13 @@ public class DataView {
         try {
           DataView window = new DataView();
           window.dataFrame.setVisible(true);
-          window.initPort();
+          window.initLoad();
         } catch (Exception e) {
           e.printStackTrace();
         }
       }
     });
   }
-
   public DataView() {
     initialize();
   }
@@ -214,7 +255,335 @@ public class DataView {
     this.userName = user;
     initialize();
   }
+  /**
+   * 初始化应用
+   */
+  public void initLoad() {
+    initPort();
+    initCountAndPieChart();
+    
+    image = new BufferedImage(picLabel.getWidth(), picLabel.getHeight(), BufferedImage.TYPE_INT_RGB);
+    graphics = image.getGraphics();
+    drawPICInit();
+    point = new Point(0, picLabel.getHeight());
+    ifProductPrint();
+    jueyuanTestReset();
+    startTimer1();
+    startTimer3();
+  }
+  /**
+   * 打开万用表
+   */
+  public void openMultimeter() {
+    try {
+      USBHelper.setUpClass();
+      String ResourceName = "USB0::0x1AB1::0x09C4::DM3R194802656::INSTR";
+      usb.setLogFile();
+      usb.getVisaResourceManagerHandle();
+      usb.openInstrument(ResourceName);
+      usb.setTimeout();
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(null, "未发现万用表:" + e.getMessage());
+    }
+  }
 
+  /**
+   * 清除USB资源
+   */
+  public void clearResource() {
+    usb.visaClear();
+  }
+
+  /**
+   * 打开两线测电阻模式
+   */
+  public void openTwoLineR_FUC() {
+    usb.visaWrite(":RATE:RESistance F");
+    usb.visaWrite(":FUNCtion:RESistance");
+  }
+
+  /**
+   * 打开直流电压测试模式
+   */
+  public void openDCvoltage_FUC() {
+    usb.visaWrite(":FUNCtion:VOLTage:DC");
+  }
+
+  /**
+   * 设置电阻测试量程
+   * 
+   * @param range
+   *          量程档位
+   */
+  public void setR_range(String range) {
+    usb.visaWrite(":RATE:RESistance F");
+    usb.visaWrite(":MEASure:RESistance " + range); // 0 200欧姆 1 2k欧姆 2 20k欧姆
+  }
+
+  /**
+   * 设置电压档量程
+   * 
+   * @param range
+   *          档位
+   */
+  public void setV_range(String range) {
+    usb.visaWrite(":MEASure:VOLTage:DC " + range); // 0 200mV 1 2V 2 20V
+  }
+
+  /**
+   * 设置测试速率
+   * 
+   * @param rate
+   */
+  public void setRate(String rate) {
+    usb.visaWrite(rate);
+  }
+
+  /**
+   * 回读电阻值，填入表中测试值，并判断测试结果是否PASS
+   * 
+   * @param row
+   *          行数
+   */
+  public void R_measure(int row) {
+    usb.visaWrite(":MEASure:RESistance?");
+    R_result = Double.parseDouble(usb.visaRead());
+    double value_xiuzheng = R_result - 0.9d; // 修正回读值
+    R_testTimes++;
+    R_TEST.add(value_xiuzheng);
+    if(R_testTimes > 1) {
+      ALLOWTEST_R1 = false;
+      ALLOWTEST_R2 = false;
+      ALLOWTEST_R3 = false;
+      R_testTimes = 0;
+      R_TEST.sort(new Comparator<Double>() {
+        @Override
+        public int compare(Double o1, Double o2) {
+          double temp = o1 - o2;
+          if(temp != 0) {
+            if(temp > 0)
+              return 1;
+            else
+              return -1;
+          }
+          else
+            return 0;          
+        }
+      });
+      value_xiuzheng = R_TEST.get(0);
+      R_TEST.clear();
+      setValueAt(row, value_xiuzheng);
+      setResValueAtRow(row);
+    }    
+  }
+
+  /**
+   * 回读电压值，填入表中测试值，并判断测试结果是否PASS
+   * 
+   * @param row
+   *          行数
+   */
+  public void V_measure(int row) {
+    usb.visaWrite(":MEASure:VOLtage?");
+    V_result = Double.parseDouble(usb.visaRead());
+    setValueAt(row, V_result);
+    setResValueAtRow(row);
+  }
+  /**
+   * 开启计时器1
+   */
+  public void startTimer1() {
+    //定义一个定时器，500毫秒定时
+    timer1 = new Timer(500, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if(!txtStop.getText().equals("RUN")) {
+          printBUT1_LL = false;
+          BUT1_SET = false;
+          ALLOWTEST_R1 = false;
+          ALLOWTEST_R2 = false;
+          ALLOWTEST_R3 = false;
+        }
+        if(ALLOWTEST_R1) {
+          R_measure(1);
+        }
+        if(ALLOWTEST_R2) {
+          R_measure(5);
+        }
+        if(ALLOWTEST_R3) {
+          R_measure(9);
+        }
+        textField13.setText(R_testTimes + "");
+        if(ALLDIALOGISSHOW) {
+          ALLDIALOGISSHOW = false;
+          txtStop.setText(testState);
+        }
+        if(txtStop.getText().equals("READY")) {
+          txtStop.setBackground(new Color(255, 255, 0));
+        }
+        else if(txtStop.getText().equals("RUN")) {
+          setTxtStopFieldRUN();
+        }
+        else if(txtStop.getText().equals("PASS")){
+          setTxtStopFieldPASS();
+          timeInterValRSTjueyuan++;
+          if(timeInterValRSTjueyuan % 2 == 0) {
+            jueyuanTestReset();
+          }
+        }
+        else if(txtStop.getText().equals("NG")) {
+          setTxtStopFieldNG();
+          timeInterValRSTjueyuan++;
+          if(timeInterValRSTjueyuan % 2 == 0) {
+            jueyuanTestReset();
+          }
+        }
+        else if(txtStop.getText().equals("STOP")) {
+          setTxtStopFieldSTOP();
+          timeInterValRSTjueyuan++;
+          if(timeInterValRSTjueyuan % 2 == 0) {
+            jueyuanTestReset();
+          }
+        }
+        if(jueyuanTestBool01 || jueyuanTestBool02) {
+          jueyuanTestBool01 = false;
+          jueyuanTestBool02 = false;
+          jueyuanTestReset();
+          startTimer2();
+        }
+        //如果readPortState()返回值包含0x01
+        if(valueEquals01(readPortState())) {
+          if(JUETYANNUM.equals("JUYUANNUM_01")) {
+            setValueAt(13, "ok");
+            setResValueAtRow(13);
+          }
+          else if(JUETYANNUM.equals("JUYUANNUM_02")) {
+            JUETYANNUM = "";
+            setValueAt(14, "ok");
+            setResValueAtRow(14);
+            outExcel = true;
+          }
+          jueyuanTestReset();
+        }
+        else if(valueEquals02(readPortState())) {
+          PLCWarmming();
+          if(JUETYANNUM.equals("JUYUANNUM_01")) {
+            setValueAt(13, "NG");
+            setResValueAtRow(13);
+            IFNGBOOL = true;
+            PLCWarmming();
+          }
+          else if(JUETYANNUM.equals("JUYUANNUM_02")) {
+            JUETYANNUM = "";
+            setValueAt(14, "NG");
+            setResValueAtRow(14);
+            IFNGBOOL = true;
+            PLCWarmming();
+          }
+          outExcel = true;
+        }
+        if(testState.equals("RUN")) {
+          s4sendtimes++;
+          if(s4sendtimes < 4) {
+            comWrite(COM4, "01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9"); 
+          }
+          else 
+            s4sendtimes = 11;
+        }
+        //拉力
+        if(printBUT1_LL) {
+          double value = xingchengLL(mydatap01) * 0.01 - 0.5;
+          if(value > 0) {
+            printBUT1_LL = false;
+            setValueAt(3, value);
+            setResValueAtRow(3);
+          }
+        }
+        else if(printBut2_LL) {
+          printBut2_LL = false;
+          double value = xingchengLL(mydatap02) * 0.01 - 0.5;
+          setValueAt(7, value);
+          setResValueAtRow(7);
+        }
+        else if(printBut3_LL) {
+          printBut3_LL = false;
+          double value = xingchengLL(mydatap03);
+          setValueAt(11, value);
+          setResValueAtRow(11);
+        }
+        //导出excl
+        if(outExcel) {
+          ECTESTSYSTools.recordtdDataOutToExcel();
+        }
+        if(IFNGBOOL) {
+          setTxtStopFieldNG();
+        }
+        ifPass();
+      }
+
+      
+    });
+    timer1.start(); 
+  }
+  /**
+   * 设置最终结果
+   */
+  public void ifPass() {
+    if(isPassed())
+      setTxtStopFieldPASS();
+    else
+      setTxtStopFieldNG();
+  }
+  /**
+   * 开启计时器2
+   */
+  public void startTimer2() {
+    timer2 = new Timer(500, new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        jueyuanTest();
+        timer2.stop();
+      }
+    });
+    timer2.start();
+  }
+  /**
+   * 开启计时器3
+   */
+  public void startTimer3() {
+    timer3 = new Timer(500, new ActionListener() {
+      
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        //行程
+        if(boolXC1) {
+          boolXC1 = false;
+          if(table.getValueAt(4, 5).equals("?")) {
+            double value = xcResult1 - 0.4;
+            setValueAt(4, value);
+            setResValueAtRow(4);
+          }
+        }
+        if(boolXC2) {
+          boolXC2 = false;
+          if(table.getValueAt(8, 5).equals("?")) {
+            double value = xcResult2 - 0.4;
+            setValueAt(8, value);
+            setResValueAtRow(8);
+          }
+        }
+        if(boolXC3) {
+          boolXC3 = false;
+          if(table.getValueAt(12, 5).equals("?")) {
+            double value = xcResult3 - 0.45;
+            setValueAt(12, value);
+            setResValueAtRow(12);
+          }
+        }
+      }
+    });
+    timer3.start();
+  }
   /**
    * 初始化页面
    */
@@ -544,7 +913,7 @@ public class DataView {
           // testButt.setEnabled(false);
           // initPort();
           // byte[] bytes = {(byte) 0xF3, (byte)0x60, (byte)0xFF};
-          //comWrite(COM4, "F3 60 FF");
+          // comWrite(COM4, "F3 60 FF");
         } else if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 1) {
           // testButt.setEnabled(false);
           startTest_righiKey();
@@ -555,7 +924,7 @@ public class DataView {
 
     testButt.setForeground(new Color(102, 0, 0));
     testButt.setBackground(Color.GREEN);
-    testButt.setBounds(49, 171, 93, 23);
+    testButt.setBounds(42, 153, 93, 23);
     runPanel.add(testButt);
 
     textField13 = new JTextField();
@@ -577,6 +946,11 @@ public class DataView {
     textField16.setBounds(WIDTH / 32, HEIGHT * 57 / 216 + 15, WIDTH / 16, HEIGHT * 2 / 72);
     runPanel.add(textField16);
     textField16.setOpaque(false);
+    textField16.setVisible(false);
+    
+    picLabel = new JLabel(picImage);
+    picLabel.setBounds(0, (HEIGHT * 51 / 72 + 5)/2, WIDTH*2/16, (HEIGHT * 51 / 72 + 5)/2);
+    runPanel.add(picLabel);
 
     serialPanel = new JPanel();
     serialPanel.setOpaque(false);
@@ -1517,6 +1891,7 @@ public class DataView {
   public void setTxtStopFieldNG() {
     txtStop.setText("NG");
     txtStop.setBackground(Color.RED);
+    setNgFieldCount();
     PLCWarmming();
   }
 
@@ -1526,6 +1901,7 @@ public class DataView {
   public void setTxtStopFieldPASS() {
     txtStop.setText("PASS");
     txtStop.setBackground(new Color(0, 204, 51));
+    setOkFieldCount();
   }
 
   /**
@@ -1623,6 +1999,24 @@ public class DataView {
   public int getTotalCount() {
     return Integer.parseInt(getRecorddata().getRecordsum());
   }
+  /**
+   * 结果框显示值为PASS或者点测复选框被选中，判断测试值是否全部通过
+   * @return 真假值
+   */
+  public boolean isPassed() {
+    if (txtStop.getText().equals("RUN") || spotTestCbox.isSelected()) {
+      if (resultOkAtRow(1) && resultOkAtRow(2) && resultOkAtRow(3) && resultOkAtRow(4) && resultOkAtRow(5)
+          && resultOkAtRow(6) && resultOkAtRow(7) && resultOkAtRow(8) && resultOkAtRow(9) && resultOkAtRow(10)
+          && resultOkAtRow(11) && resultOkAtRow(12) && resultOkAtRow(13) && resultOkAtRow(14)) {
+
+        return true;
+      }
+      else
+        return false;
+    }
+    else
+      return false;
+  }
 
   /**
    * 发送不良报警给PLC
@@ -1631,13 +2025,15 @@ public class DataView {
     pciState = (byte) (pciState | 0x01);
     sendMesToPLCByPCI(0, pciState);
   }
+
   /**
    * 取消报警
    */
   public void cancelWarmming() {
-      pciState = (byte)(pciState & 0xFE);
-      sendMesToPLCByPCI(0, pciState);
+    pciState = (byte) (pciState & 0xFE);
+    sendMesToPLCByPCI(0, pciState);
   }
+
   /**
    * 绝缘测试复位
    */
@@ -1653,7 +2049,32 @@ public class DataView {
     pciState = (byte) ((pciState | 0x02) & 0xFB);
     sendMesToPLCByPCI(0, pciState);
   }
-
+  /**
+   * readPortState()返回值包含0x01
+   * @param bytes
+   * @return
+   */
+  public boolean valueEquals01(byte[] bytes) {
+    for(int i = 0; i < bytes.length; i++) {
+      if(bytes[i] == 0x01) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * readPortState()返回值包含0x02
+   * @param bytes
+   * @return
+   */
+  public boolean valueEquals02(byte[] bytes) {
+    for(int i = 0; i < bytes.length; i++) {
+      if(bytes[i] == 0x02) {
+        return true;
+      }
+    }
+    return false;
+  }
   public byte[] readPortState() {
     portCount = instantDiCtrl.getPortCount();
     if (portData == null) {
@@ -1680,7 +2101,7 @@ public class DataView {
       handleError(err);
     }
   }
-
+  ////////////////////////////////////////////////////////////////////////////////////////////////
   public void drawPICInit() {
     for (int i = 0; i < dataCountOfLi; i++) {
       int fldata = (int) (i % 1200) / 2;
@@ -1689,13 +2110,33 @@ public class DataView {
       mydatap03.add(fldata);
     }
   }
+  
+  public void drawPIC(List<Integer> lalidata, int dataofli) {
+    EventQueue.invokeLater(new Runnable() {
 
+      @Override
+      public void run() {
+        for(int i = 0; i < dataofli; i++) {
+          if(i >= 1) {
+            graphics.drawOval(point.x + i / 2 , point.y - lalidata.get(i), 1, 1);
+          }
+        }
+      }
+    });
+    try {
+      ImageIO.write(image, "PNG", new File("src/picImage.png"));
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(null, e.getMessage());
+    }
+    picImage = new ImageIcon("src/picImage.png");
+  }
+  
   public int xingchengLL(List<Integer> datajh) {
     int XCLL = 0;
     List<Integer> diyipeck = new ArrayList<Integer>();
-    for(int i = 1; i < datajh.size() - 1; i++) {
-      if(datajh.get(i + 1) != 0 && datajh.get(i - 1) != 0 && datajh.get(i) < 500) {
-        if(datajh.get(i) > datajh.get(i + 1)) {
+    for (int i = 1; i < datajh.size() - 1; i++) {
+      if (datajh.get(i + 1) != 0 && datajh.get(i - 1) != 0 && datajh.get(i) < 500) {
+        if (datajh.get(i) > datajh.get(i + 1)) {
           diyipeck.add(datajh.get(i));
         }
       }
@@ -1704,18 +2145,18 @@ public class DataView {
       @Override
       public int compare(Object o1, Object o2) {
         int temp = 0;
-        if(o1 instanceof Integer && o2 instanceof Integer) {
-          temp = (Integer) o1 - (Integer)o2;  
-        } 
-        return temp == 0 ?0:temp;
-      } 
+        if (o1 instanceof Integer && o2 instanceof Integer) {
+          temp = (Integer) o1 - (Integer) o2;
+        }
+        return temp == 0 ? 0 : temp;
+      }
     });
-    if(diyipeck.size() >= 10) {
+    if (diyipeck.size() >= 10) {
       XCLL = diyipeck.get(diyipeck.size() - 1);
     }
     return XCLL;
   }
-
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * 通过PCI向PLC发送数据
    * 
@@ -1742,123 +2183,7 @@ public class DataView {
     }
   }
 
-  /**
-   * 打开万用表
-   */
-  public void openMultimeter() {
-    try {
-      USBHelper.setUpClass();
-      String ResourceName = "USB0::0x1AB1::0x09C4::DM3R194802656::INSTR";
-      usb.setLogFile();
-      usb.getVisaResourceManagerHandle();
-      usb.openInstrument(ResourceName);
-      usb.setTimeout();
-    } catch (Exception e) {
-      JOptionPane.showMessageDialog(null, "未发现万用表:" + e.getMessage());
-    }
-  }
-
-  /**
-   * 清除USB资源
-   */
-  public void clearResource() {
-    usb.visaClear();
-  }
-
-  /**
-   * 打开两线测电阻模式
-   */
-  public void openTwoLineR_FUC() {
-    usb.visaWrite(":RATE:RESistance F");
-    usb.visaWrite(":FUNCtion:RESistance");
-  }
-
-  /**
-   * 打开直流电压测试模式
-   */
-  public void openDCvoltage_FUC() {
-    usb.visaWrite(":FUNCtion:VOLTage:DC");
-  }
-
-  /**
-   * 设置电阻测试量程
-   * 
-   * @param range
-   *          量程档位
-   */
-  public void setR_range(String range) {
-    usb.visaWrite(":RATE:RESistance F");
-    usb.visaWrite(":MEASure:RESistance " + range); // 0 200欧姆 1 2k欧姆 2 20k欧姆
-  }
-
-  /**
-   * 设置电压档量程
-   * 
-   * @param range
-   *          档位
-   */
-  public void setV_range(String range) {
-    usb.visaWrite(":MEASure:VOLTage:DC " + range); // 0 200mV 1 2V 2 20V
-  }
-
-  /**
-   * 设置测试速率
-   * 
-   * @param rate
-   */
-  public void setRate(String rate) {
-    usb.visaWrite(rate);
-  }
-
-  /**
-   * 回读电阻值，填入表中测试值，并判断测试结果是否PASS
-   * 
-   * @param row
-   *          行数
-   */
-  public void R_measure(int row) {
-    usb.visaWrite(":MEASure:RESistance?");
-    String value = usb.visaRead();
-    double valuePlus = Double.parseDouble(value) - 0.9d; // 修正回读值
-    setValueAt(row, valuePlus);
-    setResValueAtRow(row);
-  }
-
-  /**
-   * 回读电压值，填入表中测试值，并判断测试结果是否PASS
-   * 
-   * @param row
-   *          行数
-   */
-  public void V_measure(int row) {
-    usb.visaWrite(":MEASure:VOLtage?");
-    String value = usb.visaRead();
-    setValueAt(row, value);
-    setResValueAtRow(row);
-  }
-
-  /**
-   * 按下SET按钮，获取1脚和4脚之间的电阻值
-   */
-  public void getShortCircuitResValue() {
-    openMultimeter();
-    openTwoLineR_FUC();
-    setR_range("2");
-    R_measure(1);
-    clearResource();
-  }
-
-  /**
-   * 按下SET按钮，获取1脚电压值
-   */
-  public void getDCVolValue() {
-    openMultimeter();
-    openDCvoltage_FUC();
-    setV_range("2");
-    V_measure(2);
-    clearResource();
-  }
-
+  
   /**
    * 如果捺印复选框被选中，则发送捺印请求，否则不钠印
    */
@@ -1881,20 +2206,16 @@ public class DataView {
     new Thread() {
       public void run() {
         try {
-          Thread.sleep(2000);
+          Thread.sleep(3000);
           test_2();
           for (int i = 1; i <= 14; i++) {
             setResValueAtRow(i);
           }
-          if (txtStop.getText().equals("RUN") || spotTestCbox.isSelected()) {
-            if (!(resultOkAtRow(1) && resultOkAtRow(2) && resultOkAtRow(3) && resultOkAtRow(4) && resultOkAtRow(5)
-                && resultOkAtRow(6) && resultOkAtRow(7) && resultOkAtRow(8) && resultOkAtRow(9) && resultOkAtRow(10)
-                && resultOkAtRow(11) && resultOkAtRow(12) && resultOkAtRow(13) && resultOkAtRow(14))) {
-
-              setNgFieldCount();
-              setTxtStopFieldNG();
-            }
+          if(isPassed()) {
+            setTxtStopFieldPASS();
           }
+          else
+            setTxtStopFieldNG();
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -1909,21 +2230,16 @@ public class DataView {
     new Thread() {
       public void run() {
         try {
-          Thread.sleep(2000);
+          Thread.sleep(3000);
           test_1();
           for (int i = 1; i <= 14; i++) {
             setResValueAtRow(i);
           }
-          if (txtStop.getText().equals("RUN") || spotTestCbox.isSelected()) {
-            if (resultOkAtRow(1) && resultOkAtRow(2) && resultOkAtRow(3) && resultOkAtRow(4) && resultOkAtRow(5)
-                && resultOkAtRow(6) && resultOkAtRow(7) && resultOkAtRow(8) && resultOkAtRow(9) && resultOkAtRow(10)
-                && resultOkAtRow(11) && resultOkAtRow(12) && resultOkAtRow(13) && resultOkAtRow(14)) {
-
-              setTxtStopFieldPASS();
-              setOkFieldCount();
-            }
+          if(isPassed()) {
+            setTxtStopFieldPASS();
           }
-
+          else
+            setTxtStopFieldNG();
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
