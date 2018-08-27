@@ -222,6 +222,15 @@ public class SerialPortTool implements SerialPortEventListener {
     return cback.getResult();
   }
   /**
+   * 获取十六进制整数的ASCII码字符
+   * @param ascii
+   * @return
+   */
+  public static char byteAsciiToChar(int ascii){
+    char ch = (char)ascii;
+    return ch;
+  }
+  /**
    * 16进制的字符串表示转成字节数组
    * 
    * @param hexString

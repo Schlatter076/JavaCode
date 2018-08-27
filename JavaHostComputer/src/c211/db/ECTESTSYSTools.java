@@ -16,10 +16,11 @@ import jxl.write.WritableWorkbook;
 import java.util.ArrayList;
 
 public class ECTESTSYSTools {
-  Connection connection = null;
-  Statement stmt = null;
-  PreparedStatement pstmt = null;
-  ResultSet res = null;
+  protected Connection connection = null;
+  protected Statement stmt = null;
+  protected PreparedStatement pstmt = null;
+  protected ResultSet res = null;
+  protected static DBHelper db = new DBHelper();
   /**
    * 提供获取testsystem表全部内容
    * @return
@@ -27,7 +28,6 @@ public class ECTESTSYSTools {
   public static List<ECTESTSYStestdata> getAllbyDb() {
     List<ECTESTSYStestdata> list = new ArrayList<ECTESTSYStestdata>();
     try {
-      DBHelper db = new DBHelper();
       String sql = "select * from testsystem";
       ResultSet res = db.Search(sql, null);
       while(res.next()) {
@@ -55,7 +55,7 @@ public class ECTESTSYSTools {
    */
   public static int deleteBetteryData(String Bd) throws Exception {
     String sql = "delete from testsystem where buzhou = '" + Bd + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   /**
    * 删除testsystem表中指定的步骤和日期
@@ -66,7 +66,7 @@ public class ECTESTSYSTools {
    */
   public static int deleteTwoBetteryData(String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where buzhou = '" + Bd1 + "'" + "and date='" + Bd2 + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   /**
    * 删除testsystem表中指定的日期和Bd1与Bd2之间的步骤
@@ -78,7 +78,7 @@ public class ECTESTSYSTools {
    */
   public static int deleteTwoBetteryData01(String Bdata, String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where date = '" + Bdata + "'" + "and buzhou Between'" + Bd1 + "'" + "and'" + Bd2 + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   /**
    * 删除testsystem表中Bd1与Bd2之间的步骤
@@ -89,13 +89,12 @@ public class ECTESTSYSTools {
    */
   public static int AreaDeleteBetteryData(String Bd1, String Bd2) throws Exception {
     String sql = "delete from testsystem where buzhou Between'" + Bd1 + "'" + "and'" + Bd2 + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   
   public static List<Recorddata> getRecordtdData() {
     List<Recorddata> list = new ArrayList<Recorddata>();
     try {
-      DBHelper db = new DBHelper();
       String sql = "select * from recordtd";
       ResultSet res = db.Search(sql, null);
       while(res.next()) {
@@ -122,7 +121,6 @@ public class ECTESTSYSTools {
   public static List<Recorddata> getRecordtdData(String rtime, String rname) {
     List<Recorddata> list = new ArrayList<Recorddata>();
     try {
-      DBHelper db = new DBHelper();
       String sql = "select * from recordtd where recordtime='" + rtime + "' and recordname='" + rname + "'";
       ResultSet res = db.Search(sql, null);
       while(res.next()) {
@@ -149,9 +147,17 @@ public class ECTESTSYSTools {
    */
   public static int deleterecord(String recordtime, String recordname) throws Exception {
     String sql = "delete  from recordtd where recordtime='" + recordtime + "' and recordname='" + recordname + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
-  
+  /**
+   * 根据sql语句更新数据库
+   * @param sql  sql语句
+   * @return 
+   * @throws Exception
+   */
+  public static int updateRecord(String sql) throws Exception {
+    return db.AddU(sql, null);
+  }
   /**
    * 提供recordtd表插入方法
    * @param sql
@@ -161,7 +167,7 @@ public class ECTESTSYSTools {
    */
   public static int addrecord(String str[]) throws Exception{
     String sql = "insert into recordtd(recordname,recordsum,recordok,recordng,recordts,recordtime) values(?, ?, ?, ?, ?, ?)";
-    return new DBHelper().AddU(sql, str);
+    return db.AddU(sql, str);
   }
   /**
    * 提供producttypes表中插入productname方法
@@ -171,7 +177,7 @@ public class ECTESTSYSTools {
    */
   public static int addProductsName(String productname) throws Exception {
     String sql = "insert into producttypes(productname) values('" + productname + "')";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   /**
    * 从producttypes表中删除productname为ductsName的数据
@@ -181,7 +187,7 @@ public class ECTESTSYSTools {
    */
   public static int deleteProductsName(String ductsName) throws Exception {
     String sql = "delete from producttypes where productname='" + ductsName + "'";
-    return new DBHelper().AddU(sql, null);
+    return db.AddU(sql, null);
   }
   /**
    * 获取表C211中所有数据
@@ -191,7 +197,6 @@ public class ECTESTSYSTools {
   public static List<Producttestitemsdata> getproductsTestItems(String productsName) {
     List<Producttestitemsdata> list = new ArrayList<Producttestitemsdata>();
     try {
-      DBHelper db = new DBHelper();
       String sql = "select * from " + productsName;
       ResultSet res = db.Search(sql, null);
       while(res.next()) {
@@ -218,7 +223,6 @@ public class ECTESTSYSTools {
   public static List<Recorddata> getrecordtdItems(String recordtdName) {
     List<Recorddata> list = new ArrayList<Recorddata>();
     try {
-      DBHelper db = new DBHelper();
       String sql = "select * from " + recordtdName;
       ResultSet res = db.Search(sql, null);
       while(res.next()) {

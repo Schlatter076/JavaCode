@@ -30,7 +30,7 @@ public class USBHelper {
  
   public static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
   
-  static final String LOG_PATH = "log/c211log.txt";
+  static final String LOG_PATH = "log/usblog.txt";
   
   static File logFile; 
   

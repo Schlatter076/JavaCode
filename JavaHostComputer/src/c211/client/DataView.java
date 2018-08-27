@@ -14,6 +14,7 @@ import c211.serialException.TooManyListeners;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
+
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 
@@ -53,12 +54,17 @@ import javax.swing.JOptionPane;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TooManyListenersException;
 import java.util.Vector;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
@@ -70,6 +76,9 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 
@@ -144,6 +153,7 @@ public class DataView {
 
   private JTable table;
   private MyTableCellRenderrer myTableCellRenderrer = null;
+  private PortListener listener = new PortListener();
 
   private USBHelper usb = new USBHelper();
   private InstantDoCtrl instantDoCtrl = new InstantDoCtrl();
@@ -167,6 +177,9 @@ public class DataView {
   private double R_result= 0.0d;
   private int PLCtestTimes = 0;
   private int R_testTimes = 0;
+  private int rtimes01 = 0;
+  private int rtimes02 = 0;
+  private int rtimes03 = 0;
   private int timeInterValRSTjueyuan = 0;
   private List<Double> R_TEST = new ArrayList<Double>();
   private Timer timer1;
@@ -197,7 +210,6 @@ public class DataView {
   private boolean IFNGBOOL = false;
   private boolean outExcel;
   
-
   protected SerialPort COM1;
   protected SerialPort COM2;
   protected SerialPort COM3;
@@ -211,6 +223,14 @@ public class DataView {
   private boolean s7ok = false;
   private boolean s8ok = false; 
   
+  public static FileHandler logFileHandler;
+  protected static final String CLASS_NAME = DataView.class.getName();
+  public static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
+  public final String LOG_FOLDER = "log/";
+  public static SimpleFormatter logFormatter;
+  static final String LOG_PATH = "log//DataView.txt";
+  static File logFile;
+  
   /**
    * 提供实例化本类方法
    * 
@@ -223,37 +243,52 @@ public class DataView {
         try {
           DataView window = new DataView(user);
           window.dataFrame.setVisible(true);
-          window.initLoad();
+          window.initLoad(); 
         } catch (Exception e) {
           e.printStackTrace();
         }
       }
     });
   }
-
-  public static void main(String[] args) {
-    EventQueue.invokeLater(new Runnable() {
-      public void run() {
-        try {
-          DataView window = new DataView();
-          window.dataFrame.setVisible(true);
-          window.initLoad();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    });
-  }
-  public DataView() {
-    initialize();
-  }
-
+//  public static void main(String[] args) {
+//    EventQueue.invokeLater(new Runnable() {
+//      public void run() {
+//        try {
+//          DataView window = new DataView();
+//          window.dataFrame.setVisible(true);
+//          window.initLoad();
+//        } catch (Exception e) {
+//          e.printStackTrace();
+//        }
+//      }
+//    });
+//  }
+//  public DataView() {
+//    initialize();
+//  }
   /**
    * 本类构造器，接收登录页面传进User值
    */
   public DataView(String user) {
-    this.userName = user;
-    initialize();
+    try {
+      Path logPath = Paths.get(LOG_FOLDER);
+      if (Files.notExists(logPath)) {
+        Files.createDirectory(logPath);
+      }
+      logFileHandler = new FileHandler(String.format("%s%sLog.txt", LOG_FOLDER, DataView.class.getSimpleName()));
+      logFormatter = new SimpleFormatter();
+      logFileHandler.setFormatter(logFormatter);
+      LOGGER.addHandler(logFileHandler);
+      
+      this.userName = user;
+      initialize();
+      
+      LOGGER.log(Level.INFO, String.format("登陆用户为： %s.", userName));
+      LOGGER.setLevel(Level.SEVERE);
+    } catch(SecurityException | IOException | UnsatisfiedLinkError e) {
+      LOGGER.log(Level.SEVERE, e.getMessage(), e);
+    }
+   
   }
   /**
    * 初始化应用
@@ -271,6 +306,7 @@ public class DataView {
     startTimer1();
     startTimer3();
   }
+  
   /**
    * 打开万用表
    */
@@ -356,20 +392,7 @@ public class DataView {
       ALLOWTEST_R2 = false;
       ALLOWTEST_R3 = false;
       R_testTimes = 0;
-      R_TEST.sort(new Comparator<Double>() {
-        @Override
-        public int compare(Double o1, Double o2) {
-          double temp = o1 - o2;
-          if(temp != 0) {
-            if(temp > 0)
-              return 1;
-            else
-              return -1;
-          }
-          else
-            return 0;          
-        }
-      });
+      Collections.sort(R_TEST);
       value_xiuzheng = R_TEST.get(0);
       R_TEST.clear();
       setValueAt(row, value_xiuzheng);
@@ -400,6 +423,7 @@ public class DataView {
         if(!txtStop.getText().equals("RUN")) {
           printBUT1_LL = false;
           BUT1_SET = false;
+          rtimes01 = 0;
           ALLOWTEST_R1 = false;
           ALLOWTEST_R2 = false;
           ALLOWTEST_R3 = false;
@@ -407,13 +431,14 @@ public class DataView {
         if(ALLOWTEST_R1) {
           R_measure(1);
         }
-        if(ALLOWTEST_R2) {
+        else if(ALLOWTEST_R2) {
           R_measure(5);
         }
-        if(ALLOWTEST_R3) {
+        else if(ALLOWTEST_R3) {
           R_measure(9);
         }
         textField13.setText(R_testTimes + "");
+        //addRecord();
         if(ALLDIALOGISSHOW) {
           ALLDIALOGISSHOW = false;
           txtStop.setText(testState);
@@ -468,17 +493,17 @@ public class DataView {
         else if(valueEquals02(readPortState())) {
           PLCWarmming();
           if(JUETYANNUM.equals("JUYUANNUM_01")) {
-            setValueAt(13, "NG");
+            setValueAt(13, "failed");
             setResValueAtRow(13);
             IFNGBOOL = true;
-            PLCWarmming();
+            //PLCWarmming();
           }
           else if(JUETYANNUM.equals("JUYUANNUM_02")) {
             JUETYANNUM = "";
-            setValueAt(14, "NG");
+            setValueAt(14, "failed");
             setResValueAtRow(14);
             IFNGBOOL = true;
-            PLCWarmming();
+            //PLCWarmming();
           }
           outExcel = true;
         }
@@ -517,11 +542,11 @@ public class DataView {
         }
         if(IFNGBOOL) {
           setTxtStopFieldNG();
+          IFNGBOOL = false;
+          ECTESTSYSTools.recordtdDataOutToExcel();
         }
         ifPass();
       }
-
-      
     });
     timer1.start(); 
   }
@@ -587,7 +612,7 @@ public class DataView {
   /**
    * 初始化页面
    */
-  private void initialize() {
+  private void initialize() {    
     dataFrame = new JFrame();
     // dataFrame.getContentPane().setBackground(new Color(245, 245, 220));
     // 自动获取屏幕分辨率
@@ -600,10 +625,7 @@ public class DataView {
     dataFrame.setResizable(false); // 窗口大小不可改
     dataFrame.setUndecorated(true);
     // 更换背景图片
-    // ImageIcon img_1 = new ImageIcon("src/back.jpg");
-    // ImageIcon img_1 = new ImageIcon("src/img11.jpg");
     ImageIcon img_1 = new ImageIcon("src/run.jpg");
-    // ImageIcon img_1 = new ImageIcon("src/water.png");
     JLabel imgLabel = new JLabel(img_1);
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
     imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
@@ -620,8 +642,6 @@ public class DataView {
         // 当有键按下，且为F键(此时需按shift+f)时，刷新页面数据
         if (((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_F) {
           initCountAndPieChart();
-          // ECTESTSYSTools.recordtdDataOutToExcel();
-          // JOptionPane.showMessageDialog(null, "刷新页面");
         }
       }
     }, AWTEvent.KEY_EVENT_MASK);
@@ -751,8 +771,15 @@ public class DataView {
     exitSysMnItm.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         int num = JOptionPane.showConfirmDialog(null, "确认退出？", "提示", JOptionPane.YES_NO_OPTION);
-        if (num == JOptionPane.YES_OPTION)
-          System.exit(0);
+        if (num == JOptionPane.YES_OPTION) {
+          try {
+            onClosing();
+          } catch(Exception ex) {
+            LOGGER.log(Level.INFO, ex.getMessage());
+          }finally {
+            System.exit(0);
+          }
+        }
       }
     });
 
@@ -872,7 +899,7 @@ public class DataView {
         }
       }
     }.start();
-
+    
     runPanel = new JPanel();
     runPanel.setOpaque(false);
     runPanel.setForeground(new Color(0, 204, 0));
@@ -1387,6 +1414,7 @@ public class DataView {
         COM1 = SerialPortTool.getPort(1);
         s1ok = comWrite(COM1, "AA");
         COM1Butt.setBackground(Color.RED);
+        listener.add(COM1, listener.COM1Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM1:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1394,6 +1422,8 @@ public class DataView {
       } catch (NoSuchPort e) {
         JOptionPane.showMessageDialog(null, "COM1:" + e.toString());
       } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, "COM1:" + e.toString());
+      } catch (TooManyListeners e) {
         JOptionPane.showMessageDialog(null, "COM1:" + e.toString());
       }
     }
@@ -1405,6 +1435,7 @@ public class DataView {
         COM2 = SerialPortTool.getPort(2);
         s2ok = comWrite(COM2, "BB");
         COM2Butt.setBackground(Color.RED);
+        listener.add(COM2, listener.COM2Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM2:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1412,6 +1443,8 @@ public class DataView {
       } catch (NoSuchPort e) {
         JOptionPane.showMessageDialog(null, "COM2:" + e.toString());
       } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, "COM2:" + e.toString());
+      } catch (TooManyListeners e) {
         JOptionPane.showMessageDialog(null, "COM2:" + e.toString());
       }
     }
@@ -1423,6 +1456,7 @@ public class DataView {
         COM3 = SerialPortTool.getPort(3);
         s3ok = comWrite(COM3, "AA");
         COM3Butt.setBackground(Color.RED);
+        listener.add(COM3, listener.COM3Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1430,6 +1464,8 @@ public class DataView {
       } catch (NoSuchPort e) {
         JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
       } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
+      } catch (TooManyListeners e) {
         JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
       }
     }
@@ -1441,7 +1477,7 @@ public class DataView {
         COM4 = SerialPortTool.getPort(4);
         s4ok = comWrite(COM4, "BB");
         COM4Butt.setBackground(Color.RED);
-        addListener(COM4, portListener());
+        listener.add(COM4, listener.COM4Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM4:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1474,6 +1510,7 @@ public class DataView {
         COM7 = SerialPortTool.getPort(5);
         s7ok = comWrite(COM7, "AA");
         COM7Butt.setBackground(Color.RED);
+        listener.add(COM7, listener.COM7Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM7:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1481,6 +1518,8 @@ public class DataView {
       } catch (NoSuchPort e) {
         JOptionPane.showMessageDialog(null, "COM7:" + e.toString());
       } catch (PortInUse e) {
+        JOptionPane.showMessageDialog(null, "COM7:" + e.toString());
+      } catch (TooManyListeners e) {
         JOptionPane.showMessageDialog(null, "COM7:" + e.toString());
       }
     }
@@ -1492,6 +1531,7 @@ public class DataView {
         COM8 = SerialPortTool.getPort(6);
         s8ok = comWrite(COM8, "BB");
         COM8Butt.setBackground(Color.RED);
+        listener.add(COM8, listener.COM8Listener());
       } catch (SerialPortParamFail e) {
         JOptionPane.showMessageDialog(null, "COM8:" + e.toString());
       } catch (NotASerialPort e) {
@@ -1500,9 +1540,12 @@ public class DataView {
         JOptionPane.showMessageDialog(null, "COM8:" + e.toString());
       } catch (PortInUse e) {
         JOptionPane.showMessageDialog(null, "COM8:" + e.toString());
+      } catch (TooManyListeners e) {
+        JOptionPane.showMessageDialog(null, "COM8:" + e.toString());
       }
     }
     try {
+      openMultimeter();
       Thread.sleep(100);
     } catch (InterruptedException e) {
       JOptionPane.showMessageDialog(null, "port:" + e.getMessage());
@@ -1557,62 +1600,6 @@ public class DataView {
     }
 
   }
-
-  /**
-   * 添加监听器
-   * 
-   * @param port
-   *          串口对象
-   * @param listener
-   *          串口监听器
-   * @throws TooManyListeners
-   *           监听类对象过多
-   */
-  public void addListener(SerialPort port, SerialPortEventListener listener) throws TooManyListeners {
-
-    try {
-      // 给串口添加监听器
-      port.addEventListener(listener);
-      // 设置当有数据到达时唤醒监听接收线程
-      port.notifyOnDataAvailable(true);
-      // 设置当通信中断时唤醒中断线程
-      port.notifyOnBreakInterrupt(true);
-
-    } catch (TooManyListenersException e) {
-      throw new TooManyListeners();
-    }
-  }
-
-  /**
-   * 串口监听对象
-   */
-  public SerialPortEventListener portListener() {
-    SerialPortEventListener listener = new SerialPortEventListener() {
-      @Override
-      public void serialEvent(SerialPortEvent event) {
-        switch (event.getEventType()) {
-        case SerialPortEvent.BI:
-        case SerialPortEvent.OE:
-        case SerialPortEvent.FE:
-        case SerialPortEvent.PE:
-        case SerialPortEvent.CD:
-        case SerialPortEvent.CTS:
-        case SerialPortEvent.DSR:
-        case SerialPortEvent.RI:
-        case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-          JOptionPane.showMessageDialog(null, event.toString());
-          break;
-        case SerialPortEvent.DATA_AVAILABLE: {
-          // 有数据到达-----可以开始处理
-          allStart();
-        }
-          break;
-        }
-      }
-    };
-    return listener;
-  }
-
   /**
    * 判断传回的字节值的16进制字符串是否与特定值相同
    * 
@@ -1622,162 +1609,13 @@ public class DataView {
    *          特定十六进制字符串
    * @return 相等则返回true
    */
-  public boolean isEquals(byte hex, String data) {
+  public static boolean isEquals(byte hex, String data) {
     String s1 = String.format("%02x", hex);
     if (s1.equals(data))
       return true;
     else
       return false;
   }
-
-  public void allStart() {
-    try {
-      byte[] datas = SerialPortTool.readByte(COM4);
-      for (int i = 0; i < datas.length - 14; i++) {
-        // plc start ask 01 10 00 01 00 08 10 00 60 00 81 00 68 00 84 00 79 00 80 00 67
-        // 00 62 E7 3C
-        if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "81")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "68") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "84") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "79")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "80") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc reset ask 01 10 00 01 00 08 10 00 60 00 83 00 50 00 67 00 83 00 87 00 67
-        // 00 62 07 E5
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "50") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "87") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc s3wc ask 01 10 00 01 00 08 10 00 60 00 83 00 51 00 67 00 83 00 87 00 67
-        // 00 62 03 19
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "51") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "87") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S1 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 49 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "99")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S1 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 49 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S2 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 50 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "50") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S2 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 50 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "50") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S3 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 51 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "51") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc S3 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 51 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "51") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc 绝缘1 test ask 60 00 67 00 83 00 74 00 49 00 83 00 49 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "49")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // plc 绝缘2 test ask 60 00 67 00 83 00 74 00 50 00 83 00 49 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "50")
-            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
-            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
-          // start---
-
-        }
-        // 测行程01 10 00 01 00 08 10 00 [60 00 88 00 67 00 49 AA BB 00 00 00 00 00 62] 1B
-        // BE
-        // plc 行程1 test 60 88 67 49 00 00 00 00 00 00 00 00 00 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "49") && isEquals(datas[i + 14], "62")) {
-
-          //
-
-        }
-        // plc 行程2 test 60 88 67 50 00 00 00 00 00 00 00 00 00 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "50") && isEquals(datas[i + 14], "62")) {
-
-        }
-        // plc 行程3 test 60 88 67 51 00 00 00 00 00 00 00 00 00 00 62
-        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
-            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "51") && isEquals(datas[i + 14], "62")) {
-
-        }
-
-      }
-      // if(datas[0] )
-      String s1 = String.format("%02x", datas[0]);
-      String s2 = String.format("%02x", datas[1]);
-      String s3 = String.format("%02x", datas[2]);
-      if (s1.equals("f3") && s2.equals("60") && s3.equals("ff")) {
-        startTest_righiKey();
-      } else {
-        for (int i = 0; i < datas.length; i++) {
-          System.out.println(Integer.toHexString(datas[i]));
-        }
-      }
-    } catch (ReadDataFromSerialFail e) {
-      JOptionPane.showMessageDialog(null, e.toString());
-    } catch (InputStreamCloseFail e) {
-      JOptionPane.showMessageDialog(null, e.toString());
-    }
-  }
-
   /**
    * 初始化界面计数值和饼图
    */
@@ -1940,6 +1778,7 @@ public class DataView {
    *          第几行(1~14)
    */
   public void setTableTestResultNG(int i) {
+    IFNGBOOL = true;
     table.setValueAt("NG", i, 7);
     setTableCellRenderer();
     if (!spotTestCbox.isSelected()) {
@@ -1960,15 +1799,25 @@ public class DataView {
     piePlot.setSectionPaint("不良", Color.RED);
   }
 
-  // 往recordtddata表中插入当天测试数据
+  /**
+   * 往recordtddata表中插入当天测试数据
+   */
   public void addRecord() {
     LocalDate now = LocalDate.now();
     String[] str = { "C211", totalField.getText(), okField.getText(), ngField.getText(), tTimeField.getText(),
         now.toString() };
-
+    
     try {
-      ECTESTSYSTools.deleterecord(now.toString(), "C211");
-      ECTESTSYSTools.addrecord(str);
+      List<Recorddata> list = ECTESTSYSTools.getRecordtdData(now.toString(), "C211");
+      if(list.size() != 0) {
+        String sql = "update recordtd set recordname='"+ str[0] +"',recordsum='"+str[1]+"',recordok='"+str[2]+"',"
+            + "recordng='"+str[3]+"',recordts='"+str[4]+"',recordtime='"+str[5]+"' where recordtime='"+str[5]+"'";
+        ECTESTSYSTools.updateRecord(sql);
+      }
+      else 
+        ECTESTSYSTools.addrecord(str);
+      //ECTESTSYSTools.deleterecord(now.toString(), "C211");
+      //ECTESTSYSTools.addrecord(str);
     } catch (Exception e) {
       JOptionPane.showMessageDialog(null, e.getMessage());
     }
@@ -2101,6 +1950,386 @@ public class DataView {
       handleError(err);
     }
   }
+  public void COM1DatasArrived() {
+    try {
+      byte[] datas = SerialPortTool.readByte(COM1);
+      if(BUT3_SET) {
+        for(int i = 0; i < datas.length - 15; i++) {
+          if(isEquals(datas[i], "02") && isEquals(datas[i + 1], "30") && isEquals(datas[i + 2], "33")
+             && isEquals(datas[i + 3], "31") && isEquals(datas[i + 14], "0D") && isEquals(datas[i + 15], "0A")) {
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i+8]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
+            int BUT3_result = Integer.parseInt(sb.toString());
+            rtimes03++;
+            if(rtimes03 > (dataCountOfLi - 1))  rtimes03 = 0;
+            mydatap03.set(rtimes03, BUT3_result);
+            if(BUT3_result >= 700) {
+              BUT3_SET = false;
+              printBut3_LL = true;
+              rtimes03 = 0;
+            }
+          }          
+        }
+      }
+    } catch (ReadDataFromSerialFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    } catch (InputStreamCloseFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    }
+  }
+  public void COM2DatasArrived() {
+    
+  }
+  public void COM3DatasArrived() {
+    
+  }
+  public void COM4DatasArriaved() {
+    try {
+      byte[] datas = SerialPortTool.readByte(COM4);
+      for (int i = 0; i < datas.length - 14; i++) {
+        // plc start ask 01 10 00 01 00 08 10 00 60 00 81 00 68 00 84 00 79 00 80 00 67
+        // 00 62 E7 3C
+        if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "81")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "68") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "84") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "79")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "80") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if(!txtStop.getText().equals("RUN")) {
+            if(ALLDIALOGISSHOW == false) {
+              ALLOWTEST_R1 = false;
+              ALLOWTEST_R2 = false;
+              ALLOWTEST_R3 = false;
+              
+              openTwoLineR_FUC();
+              rtimes01 = 0;
+              printBUT1_LL = false;
+              printBut2_LL = false;
+              printBut3_LL = false;
+              BUT1_SET = false;
+              BUT2_SET = false;
+              BUT3_SET = false;
+              for(int ik = 0; ik < dataCountOfLi; ik++) {
+                mydatap01.set(ik, 0);
+                mydatap02.set(ik, 0);
+                mydatap03.set(ik, 0);
+              }
+              s4sendtimes = 0;
+              JUETYANNUM = "";
+              testState = "RUN";
+              setTxtStopFieldRUN();
+              outExcel = false;
+              cancelWarmming();
+              ALLDIALOGISSHOW = true;
+              initTable();
+              jueyuanTestBool01 = false;
+              jueyuanTestBool02 = false;
+              IFNGBOOL = false;
+              
+              xcResult1 = 0;
+              xcResult2 = 0;
+              xcResult3 = 0;
+              
+              Thread.sleep(500);
+              BUT1_SET = true;
+            }
+          }
+
+        }
+        // plc reset ask 01 10 00 01 00 08 10 00 60 00 83 00 50 00 67 00 83 00 87 00 67
+        // 00 62 07 E5
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "50") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "87") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if(ALLDIALOGISSHOW == false) {
+            testState = "STOP";
+            setTxtStopFieldSTOP();
+            cancelWarmming();
+            ALLDIALOGISSHOW = true;
+          }
+
+        }
+        // plc s3wc ask 01 10 00 01 00 08 10 00 60 00 83 00 51 00 67 00 83 00 87 00 67
+        // 00 62 03 19
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "51") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "87") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "67") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if(ALLDIALOGISSHOW == false) {
+            testState = "STOP";
+            setTxtStopFieldSTOP();
+            ALLDIALOGISSHOW = true;
+          }
+
+        }
+        // plc S1 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 49 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "99")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(1, 5).equals("?")) {
+              //openMultimeter();
+              openTwoLineR_FUC();
+              setR_range("0"); //200欧
+              ALLOWTEST_R1 = true;
+            }
+          }
+
+        }
+        // plc S1 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 49 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(2, 5).equals("?")) {
+              //openMultimeter();
+              openDCvoltage_FUC();
+              setV_range("2"); //20v
+              V_measure(2);
+            }
+            BUT2_SET = true;
+          }
+
+        }
+        // plc S2 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 50 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "50") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(5, 5).equals("?")) {
+              //openMultimeter();
+              openTwoLineR_FUC();
+              setR_range("1"); //2000欧
+              ALLOWTEST_R2 = true;
+            }
+          }
+
+        }
+        // plc S2 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 50 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "50") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(6, 5).equals("?")) {
+              //openMultimeter();
+              openDCvoltage_FUC();
+              setV_range("2"); //20v
+              V_measure(6);
+            }
+            BUT3_SET = true;
+          }
+
+        }
+        // plc S3 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 51 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "51") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(9, 5).equals("?")) {
+              //openMultimeter();
+              openTwoLineR_FUC();
+              setR_range("1"); //20000欧
+              ALLOWTEST_R3 = true;
+            }
+          }
+
+        }
+        // plc S3 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 51 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "51") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(table.getValueAt(10, 5).equals("?")) {
+              //openMultimeter();
+              openDCvoltage_FUC();
+              setV_range("2"); //20v
+              V_measure(10);
+            }
+          }
+
+        }
+        // plc 绝缘1 test ask 60 00 67 00 83 00 74 00 49 00 83 00 49 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "49")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(ALLjueyuanTestBool01 == false) {
+              ALLjueyuanTestBool01 = true;
+              JUETYANNUM = "JUYUANNUM_01";
+              jueyuanTestBool01 = true;
+            }
+          }
+
+        }
+        // plc 绝缘2 test ask 60 00 67 00 83 00 74 00 50 00 83 00 49 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "50")
+            && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
+            && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
+          // start---
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            if(jueyuanTestBool02 == false) {
+              ALLjueyuanTestBool02 = true;
+              JUETYANNUM = "JUYUANNUM_02";
+              jueyuanTestBool02 = true;
+            }
+          }
+          
+
+        }
+        // 测行程01 10 00 01 00 08 10 00 [60 00 88 00 67 00 49 AA BB 00 00 00 00 00 62] 1B
+        // BE
+        // plc 行程1 test 60 88 67 49 00 00 00 00 00 00 00 00 00 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "49") && isEquals(datas[i + 14], "62")) {
+
+          //
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            xcResult1 = (double)datas[i + 8] * 0.01;
+            boolXC1 = true;
+          }
+
+        }
+        // plc 行程2 test 60 88 67 50 00 00 00 00 00 00 00 00 00 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "50") && isEquals(datas[i + 14], "62")) {
+
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            xcResult2 = (double)datas[i + 8] * 0.01;
+            boolXC2 = true;
+          }
+        }
+        // plc 行程3 test 60 88 67 51 00 00 00 00 00 00 00 00 00 00 62
+        else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
+            && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
+            && isEquals(datas[i + 6], "51") && isEquals(datas[i + 14], "62")) {
+
+          if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+            xcResult3 = (double)datas[i + 8] * 0.01;
+            boolXC3 = true;
+          }
+        }
+
+      }
+      // if(datas[0] )
+      /*String s1 = String.format("%02x", datas[0]);
+      String s2 = String.format("%02x", datas[1]);
+      String s3 = String.format("%02x", datas[2]);
+      if (s1.equals("f3") && s2.equals("60") && s3.equals("ff")) {
+        startTest_righiKey();
+      } else {
+        for (int i = 0; i < datas.length; i++) {
+          System.out.println(Integer.toHexString(datas[i]));
+        }
+      }*/
+    } catch (ReadDataFromSerialFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    } catch (InputStreamCloseFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    } catch (InterruptedException e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    }
+  }
+  public void COM7DatasArrived() {
+    try {
+      byte[] datas = SerialPortTool.readByte(COM7);
+      if(BUT2_SET) {
+        for(int i = 0; i < datas.length - 15; i++) {
+          if(isEquals(datas[i], "02") && isEquals(datas[i + 1], "30") && isEquals(datas[i + 2], "32")
+              && isEquals(datas[i + 3], "31") && isEquals(datas[i + 14], "0d") && isEquals(datas[i + 15], "0a")) {
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
+            int BUT2_result = Integer.parseInt(sb.toString());
+            
+            rtimes02++;
+            if(rtimes02 > (dataCountOfLi - 1))  rtimes02 = 0;
+            mydatap02.set(rtimes02, BUT2_result);
+            if(BUT2_result >= 700) {
+              BUT2_SET = false;
+              printBut2_LL = true;
+              rtimes02 = 0;
+            }
+          }
+        }
+      }
+    } catch (ReadDataFromSerialFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    } catch (InputStreamCloseFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    }
+  }
+  public void COM8DataasArrived() {
+    try {
+      byte[] datas = SerialPortTool.readByte(COM8);
+      if(BUT1_SET) {
+        for(int i = 0; i < datas.length - 15; i++) {
+          if(isEquals(datas[i], "02") && isEquals(datas[i + 1], "30") && isEquals(datas[i + 2], "31")
+              && isEquals(datas[i + 3], "31") && isEquals(datas[i + 14], "0d") && isEquals(datas[i + 15], "0a")) {
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
+            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
+            
+            int BUT1_result = Integer.parseInt(sb.toString());
+            rtimes01++;
+            if(rtimes01 > (dataCountOfLi - 1))  rtimes01 = dataCountOfLi - 1;
+            else {
+              mydatap01.set(rtimes01, BUT1_result);
+              if(BUT1_result >= 700) {
+                BUT1_SET = false;
+                printBUT1_LL = true;
+                rtimes01 = 0;
+              }
+            }
+          }
+        }
+      }
+    } catch (ReadDataFromSerialFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    } catch (InputStreamCloseFail e) {
+      JOptionPane.showMessageDialog(null, e.toString());
+    }
+    
+  }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   public void drawPICInit() {
     for (int i = 0; i < dataCountOfLi; i++) {
@@ -2141,16 +2370,7 @@ public class DataView {
         }
       }
     }
-    diyipeck.sort(new Comparator<Object>() {
-      @Override
-      public int compare(Object o1, Object o2) {
-        int temp = 0;
-        if (o1 instanceof Integer && o2 instanceof Integer) {
-          temp = (Integer) o1 - (Integer) o2;
-        }
-        return temp == 0 ? 0 : temp;
-      }
-    });
+    Collections.sort(diyipeck);
     if (diyipeck.size() >= 10) {
       XCLL = diyipeck.get(diyipeck.size() - 1);
     }
@@ -2183,7 +2403,6 @@ public class DataView {
     }
   }
 
-  
   /**
    * 如果捺印复选框被选中，则发送捺印请求，否则不钠印
    */
@@ -2195,6 +2414,23 @@ public class DataView {
       pciState = (byte) (pciState | 0x08);
       sendMesToPLCByPCI(0, pciState);
     }
+  }
+  /**
+   * 系统退出
+   */
+  public void onClosing() {
+    cancelWarmming();
+    jueyuanTestReset();
+    timer1.stop();
+    timer2.stop();
+    timer3.stop();
+    COM1.close();
+    COM2.close();
+    COM3.close();
+    COM4.close();
+    COM7.close();
+    COM8.close();
+    usb.visaClear();
   }
 
   /**
@@ -2217,7 +2453,7 @@ public class DataView {
           else
             setTxtStopFieldNG();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          
         }
       }
     }.start();
@@ -2241,7 +2477,7 @@ public class DataView {
           else
             setTxtStopFieldNG();
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          
         }
       }
     }.start();
@@ -2272,5 +2508,213 @@ public class DataView {
       }
       return comp;
     }
+  }
+  //////////////////////////////////////////////////////////////////////////////
+  /**
+   * 串口对象监听类，内部类
+   * @author Loyer
+   *
+   */
+  class PortListener {
+    /**
+     * 添加监听器
+     * 
+     * @param port
+     *          串口对象
+     * @param listener
+     *          串口监听器
+     * @throws TooManyListeners
+     *           监听类对象过多
+     */
+    public void add(SerialPort port, SerialPortEventListener listener) throws TooManyListeners {
+
+      try {
+        // 给串口添加监听器
+        port.addEventListener(listener);
+        // 设置当有数据到达时唤醒监听接收线程
+        port.notifyOnDataAvailable(true);
+        // 设置当通信中断时唤醒中断线程
+        port.notifyOnBreakInterrupt(true);
+
+      } catch (TooManyListenersException e) {
+        throw new TooManyListeners();
+      }
+    }
+
+    /**
+     * 串口1监听对象
+     */
+    public SerialPortEventListener COM1Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM1:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM1DatasArrived();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+    /**
+     * 串口2监听对象
+     */
+    public SerialPortEventListener COM2Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM2:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM2DatasArrived();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+    /**
+     * 串口3监听对象
+     */
+    public SerialPortEventListener COM3Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM3:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM3DatasArrived();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+    /**
+     * 串口4监听对象
+     */
+    public SerialPortEventListener COM4Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM4:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM4DatasArriaved();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+    /**
+     * 串口7监听对象
+     */
+    public SerialPortEventListener COM7Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM7:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM7DatasArrived();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+    /**
+     * 串口8监听对象
+     */
+    public SerialPortEventListener COM8Listener() {
+      SerialPortEventListener listener = new SerialPortEventListener() {
+        @Override
+        public void serialEvent(SerialPortEvent event) {
+          switch (event.getEventType()) {
+          case SerialPortEvent.BI:
+          case SerialPortEvent.OE:
+          case SerialPortEvent.FE:
+          case SerialPortEvent.PE:
+          case SerialPortEvent.CD:
+          case SerialPortEvent.CTS:
+          case SerialPortEvent.DSR:
+          case SerialPortEvent.RI:
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
+            JOptionPane.showMessageDialog(null, "COM8:"+event.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            // 有数据到达-----可以开始处理
+            COM8DataasArrived();
+          }
+            break;
+          }
+        }
+      };
+      return listener;
+    }
+
   }
 }

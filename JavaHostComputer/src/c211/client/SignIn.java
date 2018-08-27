@@ -5,6 +5,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import java.awt.AWTEvent;
@@ -13,6 +14,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.UIManager;
 import java.awt.event.MouseAdapter;
@@ -73,11 +75,20 @@ public class SignIn {
    */
   private void initialize() {
     signInFrame = new JFrame();
+    signInFrame.setBackground(new Color(240, 255, 255));
+    signInFrame.getContentPane().setBackground(new Color(255, 255, 255));
     signInFrame.setFont(new Font("SimSun-ExtB", Font.PLAIN, 12));
     signInFrame.setTitle("\u767B\u5F55");
     signInFrame.setBounds(100, 100, 438, 326);
     signInFrame.setResizable(false); //窗口大小不可更改
     signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+    
+    ImageIcon img_1 = new ImageIcon("src/flower.jpg");
+    JLabel imgLabel = new JLabel(img_1);
+    signInFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
+    imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
+    // 将contentPane设置成透明的
+    ((JPanel) signInFrame.getContentPane()).setOpaque(false);
     
     Toolkit tk = Toolkit.getDefaultToolkit();
     //全局添加键盘监听事件
@@ -104,7 +115,7 @@ public class SignIn {
     productTextF.setHorizontalAlignment(SwingConstants.CENTER);
     productTextF.setForeground(Color.RED);
     productTextF.setBounds(34, 40, 362, 40);
-    productTextF.setFont(new Font("楷体", Font.PLAIN, 26));
+    productTextF.setFont(new Font("楷体", Font.PLAIN, 28));
     productTextF.setBackground(Color.BLACK);
     signInFrame.getContentPane().add(productTextF);
     productTextF.setColumns(8);
@@ -115,6 +126,7 @@ public class SignIn {
     signInFrame.getContentPane().add(productLabel);
     
     addProductButt = new JButton("\u6DFB\u52A0\u4EA7\u54C1\u578B\u53F7");
+    addProductButt.setOpaque(false);
     addProductButt.setBackground(new Color(224, 255, 255));
     addProductButt.addMouseListener(new MouseAdapter() {
       @Override
@@ -133,13 +145,16 @@ public class SignIn {
     
   //获取用户名和密码
     passwordField = new JPasswordField();  //新建密码区域
+    passwordField.setBackground(new Color(255, 255, 240));
+    //passwordField.setOpaque(false);
     //passwordField.setRequestFocusEnabled(true);
     //passwordField.requestFocus(true);
     commom = UserTools.getUserByName("commom");
     admin = UserTools.getUserByName("admin");
     idField = new JComboBox<String>();
+    //idField.setOpaque(false);
     idField.setFont(new Font("等线", Font.PLAIN, 16));
-    idField.setBackground(new Color(255, 250, 250));
+    idField.setBackground(new Color(255, 255, 240));
     idField.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if(!idField.getEditor().getItem().equals(commom.getUsername()))
@@ -181,6 +196,7 @@ public class SignIn {
     signInFrame.getContentPane().add(passwordField);
     
     signInButt = new JButton("\u7528\u6237\u767B\u5F55");
+    signInButt.setOpaque(false);
     signInButt.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         getSignInEvent();
@@ -193,6 +209,7 @@ public class SignIn {
     signInFrame.getContentPane().add(signInButt);
     
     exitButt = new JButton("\u9000\u51FA\u7CFB\u7EDF");
+    exitButt.setOpaque(false);
     exitButt.setBackground(new Color(224, 255, 255));
     exitButt.setForeground(UIManager.getColor("List.dropLineColor"));
     exitButt.setBounds(34, 229, 112, 40);

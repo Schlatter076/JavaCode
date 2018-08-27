@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDate;
 
 public class ViewResult {
 
@@ -58,7 +59,7 @@ public class ViewResult {
     });
   }
 
-  public static void main(String[] args) {
+  /*public static void main(String[] args) {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
@@ -70,7 +71,7 @@ public class ViewResult {
       }
     });
   }
-
+*/
   public ViewResult() {
     initialize();
   }
@@ -253,8 +254,16 @@ public class ViewResult {
       for(int i = 0; i < 6; i++) {
         str[i] = table.getValueAt(row, i + 1).toString();
       }
-      ECTESTSYSTools.deleterecord(getTableValueAt(row), "C211");
-      ECTESTSYSTools.addrecord(str);
+      Vector<String> vector = addRowDatas(getTableValueAt(row));
+      //如果数据库中没有该数据
+      if(vector.size() == 0) {
+        ECTESTSYSTools.addrecord(str);
+      }
+      else {
+        String sql = "update recordtd set recordname='"+ str[0] +"',recordsum='"+str[1]+"',recordok='"+str[2]+"',"
+            + "recordng='"+str[3]+"',recordts='"+str[4]+"',recordtime='"+str[5]+"' where recordtime='"+str[5]+"'";
+        ECTESTSYSTools.updateRecord(sql);
+      }
       return true;
     } catch (Exception e) {
       //JOptionPane.showMessageDialog(null, e.getMessage());

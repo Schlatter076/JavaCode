@@ -3,8 +3,14 @@ package c211.test;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
 import Automation.BDaq.ByteByRef;
+import c211.client.DataView;
+import c211.client.ViewResult;
+import c211.db.ECTESTSYSTools;
+import c211.db.Recorddata;
 import c211.serial.SerialPortTool;
 import c211.serialException.InputStreamCloseFail;
 import c211.serialException.NoSuchPort;
@@ -21,6 +27,22 @@ public class MethodTest {
   static SerialPortTool portTool = SerialPortTool.getSerialPortTool();
 
   public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
+    List<Recorddata> list = ECTESTSYSTools.getRecordtdData("2018-08-27", "C211");
+    System.out.println(list.size());
+    
+    Vector<String> vector = ViewResult.addRowDatas("2018-08-27");
+    System.out.println(vector.size());
+    
+    byte[] ch = {0x02,0x30,0x33,0x31};
+    String str = SerialPortTool.bytesToHex(ch);
+    System.out.println(str);
+    System.out.println(ch[2]);
+    System.out.println(DataView.isEquals(ch[0], "02"));
+    System.out.println(DataView.isEquals(ch[1], "30"));
+    System.out.println(DataView.isEquals(ch[2], "33"));
+    
+    char c = byteAsciiToChar(02);
+    System.out.println(c);
     /*StringBuilder strBuilder = new StringBuilder();
     strBuilder.append("01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9");
     // strBuilder.delete(0, strBuilder.length());
@@ -36,7 +58,7 @@ public class MethodTest {
     
     
 
-    ArrayList<String> port = SerialPortTool.findPort();
+    /*ArrayList<String> port = SerialPortTool.findPort();
     for (Iterator<String> i = port.iterator(); i.hasNext();) {
       String s = i.next();
       System.out.println("可用串口：" + s);
@@ -79,7 +101,7 @@ public class MethodTest {
       //System.out.print(Byte.parseByte(s) + " ");
       System.out.print(s + " ");
     }
-    System.out.println();
+    System.out.println();*/
     //System.out.println(Byte.parseByte(String.format("%02x", "b9")));
     /*SerialPort COM4 = SerialPortTool.getPort("COM4", 19200, 8, 1, 2);
     try {
@@ -104,6 +126,11 @@ public class MethodTest {
     }
     SerialPortTool.closePort(COM4);
     */
+  }
+  
+  public static char byteAsciiToChar(int ascii){
+    char ch = (char)ascii;
+    return ch;
   }
 
   /**
