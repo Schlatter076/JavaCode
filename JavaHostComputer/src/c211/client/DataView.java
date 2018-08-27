@@ -158,7 +158,7 @@ public class DataView {
   private USBHelper usb = new USBHelper();
   private InstantDoCtrl instantDoCtrl = new InstantDoCtrl();
   private InstantDiCtrl instantDiCtrl = new InstantDiCtrl();
-  private int portCount = 1;
+  private int portCount;
   private byte[] portData;
   private byte pciState = 0x00;
   private List<Integer> mydatap01 = new ArrayList<Integer>();
@@ -175,7 +175,6 @@ public class DataView {
   private double xcResult3 = 0.0d;
   private double V_result = 0.0d;
   private double R_result= 0.0d;
-  private int PLCtestTimes = 0;
   private int R_testTimes = 0;
   private int rtimes01 = 0;
   private int rtimes02 = 0;
@@ -185,11 +184,9 @@ public class DataView {
   private Timer timer1;
   private Timer timer2;
   private Timer timer3;
-  private Timer timer4;
   private boolean printBUT1_LL = false;
   private boolean printBut2_LL = false;
   private boolean printBut3_LL = false;
-  private boolean PCinit = false;
   private boolean BUT1_SET = false;
   private boolean BUT2_SET = false;
   private boolean BUT3_SET = false;
@@ -228,8 +225,6 @@ public class DataView {
   public static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
   public final String LOG_FOLDER = "log/";
   public static SimpleFormatter logFormatter;
-  static final String LOG_PATH = "log//DataView.txt";
-  static File logFile;
   
   /**
    * 提供实例化本类方法
@@ -301,6 +296,7 @@ public class DataView {
     graphics = image.getGraphics();
     drawPICInit();
     point = new Point(0, picLabel.getHeight());
+    
     ifProductPrint();
     jueyuanTestReset();
     startTimer1();
@@ -485,24 +481,24 @@ public class DataView {
           else if(JUETYANNUM.equals("JUYUANNUM_02")) {
             JUETYANNUM = "";
             setValueAt(14, "ok");
-            setResValueAtRow(14);
-            outExcel = true;
+            setResValueAtRow(14); 
           }
+          outExcel = true;
           jueyuanTestReset();
         }
         else if(valueEquals02(readPortState())) {
-          PLCWarmming();
+          //PLCWarmming();
           if(JUETYANNUM.equals("JUYUANNUM_01")) {
             setValueAt(13, "failed");
             setResValueAtRow(13);
-            IFNGBOOL = true;
+            //IFNGBOOL = true;
             //PLCWarmming();
           }
           else if(JUETYANNUM.equals("JUYUANNUM_02")) {
             JUETYANNUM = "";
             setValueAt(14, "failed");
             setResValueAtRow(14);
-            IFNGBOOL = true;
+            //IFNGBOOL = true;
             //PLCWarmming();
           }
           outExcel = true;
@@ -540,11 +536,11 @@ public class DataView {
         if(outExcel) {
           ECTESTSYSTools.recordtdDataOutToExcel();
         }
-        if(IFNGBOOL) {
+        /*if(IFNGBOOL) {
           setTxtStopFieldNG();
           IFNGBOOL = false;
           ECTESTSYSTools.recordtdDataOutToExcel();
-        }
+        }*/
         ifPass();
       }
     });
@@ -563,7 +559,7 @@ public class DataView {
    * 开启计时器2
    */
   public void startTimer2() {
-    timer2 = new Timer(500, new ActionListener() {
+    timer2 = new Timer(50, new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         jueyuanTest();
@@ -576,7 +572,7 @@ public class DataView {
    * 开启计时器3
    */
   public void startTimer3() {
-    timer3 = new Timer(500, new ActionListener() {
+    timer3 = new Timer(1, new ActionListener() {
       
       @Override
       public void actionPerformed(ActionEvent e) {
@@ -1638,7 +1634,6 @@ public class DataView {
       setPieChart(okCount, ngCount);
     }
   }
-
   /**
    * 刷新ok框数值
    */
@@ -1727,6 +1722,7 @@ public class DataView {
    * 设置运行状态框为NG
    */
   public void setTxtStopFieldNG() {
+    IFNGBOOL = false;
     txtStop.setText("NG");
     txtStop.setBackground(Color.RED);
     setNgFieldCount();
@@ -1924,9 +1920,13 @@ public class DataView {
     }
     return false;
   }
+  /**
+   * 读取端口状态
+   * @return
+   */
   public byte[] readPortState() {
     portCount = instantDiCtrl.getPortCount();
-    if (portData == null) {
+    if (portData == null || portData.length < portCount) {
       portData = new byte[portCount];
     }
     ErrorCode err = ErrorCode.Success;
@@ -2004,6 +2004,7 @@ public class DataView {
               ALLOWTEST_R1 = false;
               ALLOWTEST_R2 = false;
               ALLOWTEST_R3 = false;
+              R_testTimes = 0;
               
               openTwoLineR_FUC();
               rtimes01 = 0;
@@ -2028,6 +2029,8 @@ public class DataView {
               initTable();
               jueyuanTestBool01 = false;
               jueyuanTestBool02 = false;
+              ALLjueyuanTestBool01 = false;
+              ALLjueyuanTestBool02 = false;
               IFNGBOOL = false;
               
               xcResult1 = 0;
@@ -2199,7 +2202,7 @@ public class DataView {
             && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
           // start---
           if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
-            if(jueyuanTestBool02 == false) {
+            if(ALLjueyuanTestBool02 == false) {
               ALLjueyuanTestBool02 = true;
               JUETYANNUM = "JUYUANNUM_02";
               jueyuanTestBool02 = true;
@@ -2244,17 +2247,6 @@ public class DataView {
         }
 
       }
-      // if(datas[0] )
-      /*String s1 = String.format("%02x", datas[0]);
-      String s2 = String.format("%02x", datas[1]);
-      String s3 = String.format("%02x", datas[2]);
-      if (s1.equals("f3") && s2.equals("60") && s3.equals("ff")) {
-        startTest_righiKey();
-      } else {
-        for (int i = 0; i < datas.length; i++) {
-          System.out.println(Integer.toHexString(datas[i]));
-        }
-      }*/
     } catch (ReadDataFromSerialFail e) {
       JOptionPane.showMessageDialog(null, e.toString());
     } catch (InputStreamCloseFail e) {
@@ -2271,20 +2263,22 @@ public class DataView {
           if(isEquals(datas[i], "02") && isEquals(datas[i + 1], "30") && isEquals(datas[i + 2], "32")
               && isEquals(datas[i + 3], "31") && isEquals(datas[i + 14], "0d") && isEquals(datas[i + 15], "0a")) {
             
-            StringBuilder sb = new StringBuilder();
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
-            int BUT2_result = Integer.parseInt(sb.toString());
-            
-            rtimes02++;
-            if(rtimes02 > (dataCountOfLi - 1))  rtimes02 = 0;
-            mydatap02.set(rtimes02, BUT2_result);
-            if(BUT2_result >= 700) {
-              BUT2_SET = false;
-              printBut2_LL = true;
-              rtimes02 = 0;
+            if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+              StringBuilder sb = new StringBuilder();
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
+              int BUT2_result = Integer.parseInt(sb.toString());
+              
+              rtimes02++;
+              if(rtimes02 > (dataCountOfLi - 1))  rtimes02 = 0;
+              mydatap02.set(rtimes02, BUT2_result);
+              if(BUT2_result >= 700) {
+                BUT2_SET = false;
+                printBut2_LL = true;
+                rtimes02 = 0;
+              }
             }
           }
         }
@@ -2303,21 +2297,23 @@ public class DataView {
           if(isEquals(datas[i], "02") && isEquals(datas[i + 1], "30") && isEquals(datas[i + 2], "31")
               && isEquals(datas[i + 3], "31") && isEquals(datas[i + 14], "0d") && isEquals(datas[i + 15], "0a")) {
             
-            StringBuilder sb = new StringBuilder();
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
-            sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
-            
-            int BUT1_result = Integer.parseInt(sb.toString());
-            rtimes01++;
-            if(rtimes01 > (dataCountOfLi - 1))  rtimes01 = dataCountOfLi - 1;
-            else {
-              mydatap01.set(rtimes01, BUT1_result);
-              if(BUT1_result >= 700) {
-                BUT1_SET = false;
-                printBUT1_LL = true;
-                rtimes01 = 0;
+            if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
+              StringBuilder sb = new StringBuilder();
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 8]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 9]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
+              sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
+              
+              int BUT1_result = Integer.parseInt(sb.toString());
+              rtimes01++;
+              if(rtimes01 > (dataCountOfLi - 1))  rtimes01 = dataCountOfLi - 1;
+              else {
+                mydatap01.set(rtimes01, BUT1_result);
+                if(BUT1_result >= 700) {
+                  BUT1_SET = false;
+                  printBUT1_LL = true;
+                  rtimes01 = 0;
+                }
               }
             }
           }
@@ -2356,8 +2352,9 @@ public class DataView {
       ImageIO.write(image, "PNG", new File("src/picImage.png"));
     } catch (IOException e) {
       JOptionPane.showMessageDialog(null, e.getMessage());
+    } finally {
+      picImage = new ImageIcon("src/picImage.png");
     }
-    picImage = new ImageIcon("src/picImage.png");
   }
   
   public int xingchengLL(List<Integer> datajh) {
