@@ -394,8 +394,14 @@ public class DataView {
    * 设置最终结果
    */
   public void ifPass() {
-    if(isPassed())
+    if(isPassed()) {
       setTxtStopFieldPASS();
+    }
+    else if(hasQuestionMark() || spotTestCbox.isSelected()) {
+      if(!txtStop.getText().equals("NG")) {
+        setTxtStopFieldNG();
+      }
+    }
   }
   /**
    * 初始化页面
@@ -998,12 +1004,25 @@ public class DataView {
    * @return Double类型的数值
    */
   public double getValueAt(int row) {
+
     if (!table.getValueAt(row, 5).toString().equals("?")) {
       return Double.parseDouble(table.getValueAt(row, 5).toString());
     } else
       return -1;
   }
-
+  /**
+   * 判断表中测试值列和测试结果列中是否包含问号
+   * @return 如果没有，返回true
+   */
+  public boolean hasQuestionMark() {
+    for(int i = 1; i <= 14; i++) {
+      if(table.getValueAt(i, 5).equals("?") || table.getValueAt(i, 7).equals("?")) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   /**
    * 判断表中row(1~14)行的测试结果是否为"PASS"
    * 
