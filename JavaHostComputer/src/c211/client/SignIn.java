@@ -143,7 +143,7 @@ public class SignIn {
     idLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(idLabel);
     
-  //获取用户名和密码
+    //获取用户名和密码
     passwordField = new JPasswordField();  //新建密码区域
     passwordField.setBackground(new Color(255, 255, 240));
     //passwordField.setOpaque(false);

@@ -41,6 +41,10 @@ import javax.swing.table.TableColumn;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.PiePlot;
 
+import Automation.BDaq.ByteByRef;
+import Automation.BDaq.DaqException;
+import Automation.BDaq.DeviceInformation;
+import Automation.BDaq.DeviceTreeNode;
 import Automation.BDaq.ErrorCode;
 import Automation.BDaq.InstantDiCtrl;
 import Automation.BDaq.InstantDoCtrl;
@@ -55,7 +59,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -71,8 +74,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JButton;
 import javax.swing.JProgressBar;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +82,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-
 import javax.swing.JCheckBox;
 
 /**
@@ -125,7 +125,6 @@ public class DataView {
   private JLabel tTimeLabel;
   private JTextField txtStop;
   private JScrollPane scrollPane;
-  private JButton testButt;
   private JProgressBar progressBar;
   private JButton COM1Butt;
   private JButton COM2Butt;
@@ -155,11 +154,9 @@ public class DataView {
   private MyTableCellRenderrer myTableCellRenderrer = null;
   private PortListener listener = new PortListener();
 
-  private USBHelper usb = new USBHelper();
   private InstantDoCtrl instantDoCtrl = new InstantDoCtrl();
   private InstantDiCtrl instantDiCtrl = new InstantDiCtrl();
-  private int portCount;
-  private byte[] portData;
+  private ByteByRef by;
   private byte pciState = 0x00;
   private List<Integer> mydatap01 = new ArrayList<Integer>();
   private List<Integer> mydatap02 = new ArrayList<Integer>();
@@ -181,9 +178,9 @@ public class DataView {
   private int rtimes03 = 0;
   private int timeInterValRSTjueyuan = 0;
   private List<Double> R_TEST = new ArrayList<Double>();
-  private Timer timer1;
-  private Timer timer2;
-  private Timer timer3;
+  private Timer timer1 = new Timer(500, new Timer1Listener());
+  private Timer timer2 = new Timer(50, new Timer2Listener());
+  private Timer timer3 = new Timer(1, new Timer3Listener());
   private boolean printBUT1_LL = false;
   private boolean printBut2_LL = false;
   private boolean printBut3_LL = false;
@@ -204,7 +201,6 @@ public class DataView {
   private boolean jueyuanTestBool02 = false;
   private boolean ALLjueyuanTestBool01 = false;
   private boolean ALLjueyuanTestBool02 = false;
-  private boolean IFNGBOOL = false;
   private boolean outExcel;
   
   protected SerialPort COM1;
@@ -220,6 +216,7 @@ public class DataView {
   private boolean s7ok = false;
   private boolean s8ok = false; 
   
+  protected final USBHelper usb = new USBHelper();
   public static FileHandler logFileHandler;
   protected static final String CLASS_NAME = DataView.class.getName();
   public static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
@@ -232,6 +229,7 @@ public class DataView {
    * @param user
    *          接收登录用户名，以区分权限
    */
+  
   public static void getDataView(String user) {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
@@ -245,22 +243,6 @@ public class DataView {
       }
     });
   }
-//  public static void main(String[] args) {
-//    EventQueue.invokeLater(new Runnable() {
-//      public void run() {
-//        try {
-//          DataView window = new DataView();
-//          window.dataFrame.setVisible(true);
-//          window.initLoad();
-//        } catch (Exception e) {
-//          e.printStackTrace();
-//        }
-//      }
-//    });
-//  }
-//  public DataView() {
-//    initialize();
-//  }
   /**
    * 本类构造器，接收登录页面传进User值
    */
@@ -299,8 +281,8 @@ public class DataView {
     
     ifProductPrint();
     jueyuanTestReset();
-    startTimer1();
-    startTimer3();
+    timer1.start();
+    timer3.start();
   }
   
   /**
@@ -380,7 +362,7 @@ public class DataView {
   public void R_measure(int row) {
     usb.visaWrite(":MEASure:RESistance?");
     R_result = Double.parseDouble(usb.visaRead());
-    double value_xiuzheng = R_result - 0.9d; // 修正回读值
+    double value_xiuzheng = R_result - 1.4d; // 修正回读值
     R_testTimes++;
     R_TEST.add(value_xiuzheng);
     if(R_testTimes > 1) {
@@ -409,201 +391,11 @@ public class DataView {
     setResValueAtRow(row);
   }
   /**
-   * 开启计时器1
-   */
-  public void startTimer1() {
-    //定义一个定时器，500毫秒定时
-    timer1 = new Timer(500, new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        if(!txtStop.getText().equals("RUN")) {
-          printBUT1_LL = false;
-          BUT1_SET = false;
-          rtimes01 = 0;
-          ALLOWTEST_R1 = false;
-          ALLOWTEST_R2 = false;
-          ALLOWTEST_R3 = false;
-        }
-        if(ALLOWTEST_R1) {
-          R_measure(1);
-        }
-        else if(ALLOWTEST_R2) {
-          R_measure(5);
-        }
-        else if(ALLOWTEST_R3) {
-          R_measure(9);
-        }
-        textField13.setText(R_testTimes + "");
-        //addRecord();
-        if(ALLDIALOGISSHOW) {
-          ALLDIALOGISSHOW = false;
-          txtStop.setText(testState);
-        }
-        if(txtStop.getText().equals("READY")) {
-          txtStop.setBackground(new Color(255, 255, 0));
-        }
-        else if(txtStop.getText().equals("RUN")) {
-          setTxtStopFieldRUN();
-        }
-        else if(txtStop.getText().equals("PASS")){
-          setTxtStopFieldPASS();
-          timeInterValRSTjueyuan++;
-          if(timeInterValRSTjueyuan % 2 == 0) {
-            jueyuanTestReset();
-          }
-        }
-        else if(txtStop.getText().equals("NG")) {
-          setTxtStopFieldNG();
-          timeInterValRSTjueyuan++;
-          if(timeInterValRSTjueyuan % 2 == 0) {
-            jueyuanTestReset();
-          }
-        }
-        else if(txtStop.getText().equals("STOP")) {
-          setTxtStopFieldSTOP();
-          timeInterValRSTjueyuan++;
-          if(timeInterValRSTjueyuan % 2 == 0) {
-            jueyuanTestReset();
-          }
-        }
-        if(jueyuanTestBool01 || jueyuanTestBool02) {
-          jueyuanTestBool01 = false;
-          jueyuanTestBool02 = false;
-          jueyuanTestReset();
-          startTimer2();
-        }
-        //如果readPortState()返回值包含0x01
-        if(valueEquals01(readPortState())) {
-          if(JUETYANNUM.equals("JUYUANNUM_01")) {
-            setValueAt(13, "ok");
-            setResValueAtRow(13);
-          }
-          else if(JUETYANNUM.equals("JUYUANNUM_02")) {
-            JUETYANNUM = "";
-            setValueAt(14, "ok");
-            setResValueAtRow(14); 
-          }
-          outExcel = true;
-          jueyuanTestReset();
-        }
-        else if(valueEquals02(readPortState())) {
-          //PLCWarmming();
-          if(JUETYANNUM.equals("JUYUANNUM_01")) {
-            setValueAt(13, "failed");
-            setResValueAtRow(13);
-            //IFNGBOOL = true;
-            //PLCWarmming();
-          }
-          else if(JUETYANNUM.equals("JUYUANNUM_02")) {
-            JUETYANNUM = "";
-            setValueAt(14, "failed");
-            setResValueAtRow(14);
-            //IFNGBOOL = true;
-            //PLCWarmming();
-          }
-          outExcel = true;
-        }
-        if(testState.equals("RUN")) {
-          s4sendtimes++;
-          if(s4sendtimes < 4) {
-            comWrite(COM4, "01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9"); 
-          }
-          else 
-            s4sendtimes = 11;
-        }
-        //拉力
-        if(printBUT1_LL) {
-          double value = xingchengLL(mydatap01) * 0.01 - 0.5;
-          if(value > 0) {
-            printBUT1_LL = false;
-            setValueAt(3, value);
-            setResValueAtRow(3);
-          }
-        }
-        else if(printBut2_LL) {
-          printBut2_LL = false;
-          double value = xingchengLL(mydatap02) * 0.01 - 0.5;
-          setValueAt(7, value);
-          setResValueAtRow(7);
-        }
-        else if(printBut3_LL) {
-          printBut3_LL = false;
-          double value = xingchengLL(mydatap03);
-          setValueAt(11, value);
-          setResValueAtRow(11);
-        }
-        //导出excl
-        if(outExcel) {
-          ECTESTSYSTools.recordtdDataOutToExcel();
-        }
-        /*if(IFNGBOOL) {
-          setTxtStopFieldNG();
-          IFNGBOOL = false;
-          ECTESTSYSTools.recordtdDataOutToExcel();
-        }*/
-        ifPass();
-      }
-    });
-    timer1.start(); 
-  }
-  /**
    * 设置最终结果
    */
   public void ifPass() {
     if(isPassed())
       setTxtStopFieldPASS();
-    else
-      setTxtStopFieldNG();
-  }
-  /**
-   * 开启计时器2
-   */
-  public void startTimer2() {
-    timer2 = new Timer(50, new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        jueyuanTest();
-        timer2.stop();
-      }
-    });
-    timer2.start();
-  }
-  /**
-   * 开启计时器3
-   */
-  public void startTimer3() {
-    timer3 = new Timer(1, new ActionListener() {
-      
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        //行程
-        if(boolXC1) {
-          boolXC1 = false;
-          if(table.getValueAt(4, 5).equals("?")) {
-            double value = xcResult1 - 0.4;
-            setValueAt(4, value);
-            setResValueAtRow(4);
-          }
-        }
-        if(boolXC2) {
-          boolXC2 = false;
-          if(table.getValueAt(8, 5).equals("?")) {
-            double value = xcResult2 - 0.4;
-            setValueAt(8, value);
-            setResValueAtRow(8);
-          }
-        }
-        if(boolXC3) {
-          boolXC3 = false;
-          if(table.getValueAt(12, 5).equals("?")) {
-            double value = xcResult3 - 0.45;
-            setValueAt(12, value);
-            setResValueAtRow(12);
-          }
-        }
-      }
-    });
-    timer3.start();
   }
   /**
    * 初始化页面
@@ -653,7 +445,7 @@ public class DataView {
     headTxtField.setText("记忆开关测试系统");
     headTxtField.setHorizontalAlignment(SwingConstants.CENTER);
     headTxtField.setForeground(new Color(0, 0, 255));
-    headTxtField.setFont(new Font("等线", Font.BOLD, 50));
+    headTxtField.setFont(new Font("宋体", Font.BOLD, 50));
     headTxtField.setBackground(new Color(0, 204, 255));
     dataFrame.getContentPane().add(headTxtField);
     headTxtField.setColumns(10);
@@ -925,31 +717,6 @@ public class DataView {
     progressBar.setBounds(0, HEIGHT * 9 / 72 + 5, WIDTH * 2 / 16, HEIGHT * 2 / 72);
     runPanel.add(progressBar);
 
-    testButt = new JButton("点我");
-    testButt.addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
-          // testButt.setEnabled(false);
-          startTest();
-        } else if (e.getButton() == MouseEvent.BUTTON2 && e.getClickCount() == 1) {
-          // testButt.setEnabled(false);
-          // initPort();
-          // byte[] bytes = {(byte) 0xF3, (byte)0x60, (byte)0xFF};
-          // comWrite(COM4, "F3 60 FF");
-        } else if (e.getButton() == MouseEvent.BUTTON3 && e.getClickCount() == 1) {
-          // testButt.setEnabled(false);
-          startTest_righiKey();
-        } else
-          JOptionPane.showMessageDialog(null, "别他妈胡乱操作好吗？");
-      }
-    });
-
-    testButt.setForeground(new Color(102, 0, 0));
-    testButt.setBackground(Color.GREEN);
-    testButt.setBounds(42, 153, 93, 23);
-    runPanel.add(testButt);
-
     textField13 = new JTextField();
     textField13.setEditable(false);
     textField13.setForeground(Color.CYAN);
@@ -969,7 +736,7 @@ public class DataView {
     textField16.setBounds(WIDTH / 32, HEIGHT * 57 / 216 + 15, WIDTH / 16, HEIGHT * 2 / 72);
     runPanel.add(textField16);
     textField16.setOpaque(false);
-    textField16.setVisible(false);
+    //textField16.setVisible(false);
     
     picLabel = new JLabel(picImage);
     picLabel.setBounds(0, (HEIGHT * 51 / 72 + 5)/2, WIDTH*2/16, (HEIGHT * 51 / 72 + 5)/2);
@@ -978,8 +745,6 @@ public class DataView {
     serialPanel = new JPanel();
     serialPanel.setOpaque(false);
     serialPanel.setBounds(0, HEIGHT * 60 / 72, WIDTH * 12 / 16 + 5, HEIGHT * 12 / 72 - 5);
-    // System.out.println(serialPanel.getHeight());
-    // System.out.println(serialPanel.getWidth());
     serialPanel.setBackground(new Color(255, 228, 225));
     dataFrame.getContentPane().add(serialPanel);
     serialPanel.setLayout(null);
@@ -1094,6 +859,7 @@ public class DataView {
     // scrollPane.getViewport().setOpaque(false); //设置为透明
     scrollPane.setBounds(10, HEIGHT * 17 / 72 + 5, WIDTH * 10 / 16 - 10, HEIGHT * 42 / 72);
     dataFrame.getContentPane().add(scrollPane);
+    
   }
 
   /**
@@ -1202,7 +968,6 @@ public class DataView {
       table.setValueAt("?", i, 7); // 清空测试结果
     }
   }
-
   /**
    * 设置测试值
    * 
@@ -1262,7 +1027,7 @@ public class DataView {
   public void setResValueAtRow(int row) {
     switch (row) {
     case 1: {
-      if (getValueAt(1) <= 1d && getValueAt(1) >= 0)
+      if (getValueAt(1) <= 1d)
         setTableTestResultPASS(1);
       else
         setTableTestResultNG(1);
@@ -1360,43 +1125,7 @@ public class DataView {
     }
       break;
     }
-
   }
-
-  public void test_1() {
-    table.setValueAt("0.5", 1, 5);
-    table.setValueAt("13.2", 2, 5);
-    table.setValueAt("3", 3, 5);
-    table.setValueAt("2", 4, 5);
-    table.setValueAt("2000", 5, 5);
-    table.setValueAt("4.5", 6, 5);
-    table.setValueAt("3", 7, 5);
-    table.setValueAt("2", 8, 5);
-    table.setValueAt("635.66", 9, 5);
-    table.setValueAt("8.3", 10, 5);
-    table.setValueAt("3", 11, 5);
-    table.setValueAt("2", 12, 5);
-    table.setValueAt("ok", 13, 5);
-    table.setValueAt("ok", 14, 5);
-  }
-
-  public void test_2() {
-    table.setValueAt("0.5", 1, 5);
-    table.setValueAt("13.2", 2, 5);
-    table.setValueAt("3", 3, 5);
-    table.setValueAt("2", 4, 5);
-    table.setValueAt("2030", 5, 5);
-    table.setValueAt("4.5", 6, 5);
-    table.setValueAt("3", 7, 5);
-    table.setValueAt("2", 8, 5);
-    table.setValueAt("635.66", 9, 5);
-    table.setValueAt("8.3", 10, 5);
-    table.setValueAt("3", 11, 5);
-    table.setValueAt("2", 12, 5);
-    table.setValueAt("ok", 13, 5);
-    table.setValueAt("ok", 14, 5);
-  }
-
   /**
    * 初始化串口
    */
@@ -1486,18 +1215,6 @@ public class DataView {
         JOptionPane.showMessageDialog(null, "COM4:" + e.toString());
       }
     }
-    // if (!port.contains("COM5")) {
-    // JOptionPane.showMessageDialog(null, "未发现串口5");
-    // COM5Butt.setBackground(Color.BLACK);
-    // } else {
-    // COM5Butt.setBackground(Color.RED);
-    // }
-    // if (!port.contains("COM6")) {
-    // JOptionPane.showMessageDialog(null, "未发现串口6");
-    // COM6Butt.setBackground(Color.BLACK);
-    // } else {
-    // COM6Butt.setBackground(Color.RED);
-    // }
     if (!port.contains("COM7")) {
       JOptionPane.showMessageDialog(null, "未发现串口7");
       COM7Butt.setBackground(Color.BLACK);
@@ -1540,14 +1257,20 @@ public class DataView {
         JOptionPane.showMessageDialog(null, "COM8:" + e.toString());
       }
     }
+    ArrayList<DeviceTreeNode> installedDevice_Di = instantDiCtrl.getSupportedDevices();
+    ArrayList<DeviceTreeNode> installedDevice_Do = instantDiCtrl.getSupportedDevices();
     try {
+      instantDiCtrl.setSelectedDevice(new DeviceInformation(installedDevice_Di.get(0).toString()));
+      instantDoCtrl.setSelectedDevice(new DeviceInformation(installedDevice_Do.get(0).toString()));
       openMultimeter();
       Thread.sleep(100);
     } catch (InterruptedException e) {
       JOptionPane.showMessageDialog(null, "port:" + e.getMessage());
+    } catch(DaqException e) {
+      JOptionPane.showMessageDialog(null, "PCI:" + e.getMessage());
     }
     if (s1ok && s2ok && s3ok && s4ok && s7ok && s8ok) {
-      txtStop.setText("READY");
+      txtStop.setText("WAIT");
     }
   }
 
@@ -1624,7 +1347,8 @@ public class DataView {
       ngField.setText(ngCount + "");
       totalField.setText(totalCount + "");
       setPieChart(okCount, ngCount);
-    } else {
+    } 
+    else {
       okCount = 0;
       ngCount = 0;
       totalCount = 0;
@@ -1720,9 +1444,10 @@ public class DataView {
 
   /**
    * 设置运行状态框为NG
+   * @throws DaqException 
    */
   public void setTxtStopFieldNG() {
-    IFNGBOOL = false;
+    //IFNGBOOL = false;
     txtStop.setText("NG");
     txtStop.setBackground(Color.RED);
     setNgFieldCount();
@@ -1750,12 +1475,14 @@ public class DataView {
    * 设置运行状态框为RUN
    */
   public void setTxtStopFieldRUN() {
-    txtStop.setText("RUN");
     txtStop.setBackground(new Color(255, 255, 0));
-    setTtimeFieldCount();
-    setProgressBar();
+    //如果没有开始计时或者状态框不是RUN
+    if(tTimeField.getText().equals("0") || (!txtStop.getText().equals("RUN"))) {
+      txtStop.setText("RUN");
+      setTtimeFieldCount();
+      setProgressBar();
+    }
   }
-
   /**
    * 设置表测试结果为PASS
    * 
@@ -1772,9 +1499,10 @@ public class DataView {
    * 
    * @param i
    *          第几行(1~14)
+   * @throws DaqException 
    */
   public void setTableTestResultNG(int i) {
-    IFNGBOOL = true;
+    //IFNGBOOL = true;
     table.setValueAt("NG", i, 7);
     setTableCellRenderer();
     if (!spotTestCbox.isSelected()) {
@@ -1865,6 +1593,7 @@ public class DataView {
 
   /**
    * 发送不良报警给PLC
+   * @throws DaqException 
    */
   public void PLCWarmming() {
     pciState = (byte) (pciState | 0x01);
@@ -1873,6 +1602,7 @@ public class DataView {
 
   /**
    * 取消报警
+   * @throws DaqException 
    */
   public void cancelWarmming() {
     pciState = (byte) (pciState & 0xFE);
@@ -1895,57 +1625,34 @@ public class DataView {
     sendMesToPLCByPCI(0, pciState);
   }
   /**
-   * readPortState()返回值包含0x01
-   * @param bytes
-   * @return
-   */
-  public boolean valueEquals01(byte[] bytes) {
-    for(int i = 0; i < bytes.length; i++) {
-      if(bytes[i] == 0x01) {
-        return true;
-      }
-    }
-    return false;
-  }
-  /**
-   * readPortState()返回值包含0x02
-   * @param bytes
-   * @return
-   */
-  public boolean valueEquals02(byte[] bytes) {
-    for(int i = 0; i < bytes.length; i++) {
-      if(bytes[i] == 0x02) {
-        return true;
-      }
-    }
-    return false;
-  }
-  /**
    * 读取端口状态
    * @return
+   * @throws InterruptedException
    */
-  public byte[] readPortState() {
-    portCount = instantDiCtrl.getPortCount();
-    if (portData == null || portData.length < portCount) {
-      portData = new byte[portCount];
-    }
+  public byte readPortState() {
+    byte portDatas = 0;
+    by = new ByteByRef(portDatas);
     ErrorCode err = ErrorCode.Success;
-    err = instantDiCtrl.Read(0, portCount, portData);
+    err = instantDiCtrl.Read(0, by);
+    textField16.setText(portDatas + "");
     if (err != ErrorCode.Success) {
       handleError(err);
-      return null;
+      try {
+        timer1.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      return 0;
     }
-    return portData;
+    return by.value;
   }
-
   /**
    * 从textField16中提取值，然后发送
    */
   public void sendText16() {
     ErrorCode err = ErrorCode.Success;
-    byte[] data = SerialPortTool.toByteArray(textField16.getText());
-    err = instantDoCtrl.Write(0, portCount, data);
-    // err = instantDoCtrl.Write(0, Byte.parseByte(textField16.getText()));
+    byte data = Byte.parseByte((textField16.getText()));
+    err = instantDoCtrl.Write(0, data);
     if (err != ErrorCode.Success) {
       handleError(err);
     }
@@ -1982,17 +1689,16 @@ public class DataView {
     }
   }
   public void COM2DatasArrived() {
-    
+    return;  //保留
   }
   public void COM3DatasArrived() {
-    
+    return;  //保留
   }
   public void COM4DatasArriaved() {
     try {
       byte[] datas = SerialPortTool.readByte(COM4);
       for (int i = 0; i < datas.length - 14; i++) {
-        // plc start ask 01 10 00 01 00 08 10 00 60 00 81 00 68 00 84 00 79 00 80 00 67
-        // 00 62 E7 3C
+        //plc start ask    01 10 00 01 00 08 10 00    60 00 81 00 68 00 84 00 79 00 80 00 67 00 62    E7 3C
         if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "81")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "68") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "84") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "79")
@@ -2031,7 +1737,7 @@ public class DataView {
               jueyuanTestBool02 = false;
               ALLjueyuanTestBool01 = false;
               ALLjueyuanTestBool02 = false;
-              IFNGBOOL = false;
+              //IFNGBOOL = false;
               
               xcResult1 = 0;
               xcResult2 = 0;
@@ -2043,8 +1749,7 @@ public class DataView {
           }
 
         }
-        // plc reset ask 01 10 00 01 00 08 10 00 60 00 83 00 50 00 67 00 83 00 87 00 67
-        // 00 62 07 E5
+        //plc reset ask  01 10 00 01 00 08 10 00    60 00 83 00 50 00 67 00 83 00 87 00 67 00 62    07 E5 
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "50") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
@@ -2059,8 +1764,7 @@ public class DataView {
           }
 
         }
-        // plc s3wc ask 01 10 00 01 00 08 10 00 60 00 83 00 51 00 67 00 83 00 87 00 67
-        // 00 62 03 19
+        //plc s3wc ask   01 10 00 01 00 08 10 00     60 00 83 00 51 00 67 00 83 00 87 00 67 00 62     03 19
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "83")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "51") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "67") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "83")
@@ -2074,10 +1778,10 @@ public class DataView {
           }
 
         }
-        // plc S1 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 49 00 62
+        //plc S1 R test ask     60 00 67 00 83 00 68 00 90 00 83 00 49 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
-            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "99")
+            && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
             && isEquals(datas[i + 9], "00") && isEquals(datas[i + 10], "83") && isEquals(datas[i + 11], "00")
             && isEquals(datas[i + 12], "49") && isEquals(datas[i + 13], "00") && isEquals(datas[i + 14], "62")) {
           // start---
@@ -2091,7 +1795,7 @@ public class DataView {
           }
 
         }
-        // plc S1 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 49 00 62
+        //plc S1 V test ask     60 00 67 00 83 00 68 00 89 00 83 00 49 00 62 
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
@@ -2109,7 +1813,7 @@ public class DataView {
           }
 
         }
-        // plc S2 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 50 00 62
+        //plc S2 R test ask     60 00 67 00 83 00 68 00 90 00 83 00 50 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
@@ -2126,7 +1830,7 @@ public class DataView {
           }
 
         }
-        // plc S2 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 50 00 62
+        //plc S2 V test ask     60 00 67 00 83 00 68 00 89 00 83 00 50 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
@@ -2144,7 +1848,7 @@ public class DataView {
           }
 
         }
-        // plc S3 R test ask 60 00 67 00 83 00 68 00 90 00 83 00 51 00 62
+        //plc S3 R test ask     60 00 67 00 83 00 68 00 90 00 83 00 51 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "90")
@@ -2161,7 +1865,7 @@ public class DataView {
           }
 
         }
-        // plc S3 V test ask 60 00 67 00 83 00 68 00 89 00 83 00 51 00 62
+        //plc S3 V test ask     60 00 67 00 83 00 68 00 89 00 83 00 51 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "68") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "89")
@@ -2178,7 +1882,7 @@ public class DataView {
           }
 
         }
-        // plc 绝缘1 test ask 60 00 67 00 83 00 74 00 49 00 83 00 49 00 62
+        //plc 绝缘1 test ask     60 00 67 00 83 00 74 00 49 00 83 00 49 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "49")
@@ -2194,7 +1898,7 @@ public class DataView {
           }
 
         }
-        // plc 绝缘2 test ask 60 00 67 00 83 00 74 00 50 00 83 00 49 00 62
+        //plc 绝缘2 test ask     60 00 67 00 83 00 74 00 50 00 83 00 49 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "67")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "83") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "74") && isEquals(datas[i + 7], "00") && isEquals(datas[i + 8], "50")
@@ -2211,21 +1915,18 @@ public class DataView {
           
 
         }
-        // 测行程01 10 00 01 00 08 10 00 [60 00 88 00 67 00 49 AA BB 00 00 00 00 00 62] 1B
-        // BE
-        // plc 行程1 test 60 88 67 49 00 00 00 00 00 00 00 00 00 00 62
+        //测行程01 10 00 01 00 08 10 00 [60   00 88   00 67   00 49   AA BB   00 00 00 00 00   62] 1B BE
+        //plc 行程1 test     60 88 67 49 00 00 00 00 00 00 00 00 00 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "49") && isEquals(datas[i + 14], "62")) {
 
-          //
           if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
             xcResult1 = (double)datas[i + 8] * 0.01;
             boolXC1 = true;
           }
-
         }
-        // plc 行程2 test 60 88 67 50 00 00 00 00 00 00 00 00 00 00 62
+        //plc 行程2 test     60 88 67 50 00 00 00 00 00 00 00 00 00 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "50") && isEquals(datas[i + 14], "62")) {
@@ -2235,7 +1936,7 @@ public class DataView {
             boolXC2 = true;
           }
         }
-        // plc 行程3 test 60 88 67 51 00 00 00 00 00 00 00 00 00 00 62
+        //plc 行程3 test     60 88 67 51 00 00 00 00 00 00 00 00 00 00 62
         else if (isEquals(datas[i], "60") && isEquals(datas[i + 1], "00") && isEquals(datas[i + 2], "88")
             && isEquals(datas[i + 3], "00") && isEquals(datas[i + 4], "67") && isEquals(datas[i + 5], "00")
             && isEquals(datas[i + 6], "51") && isEquals(datas[i + 14], "62")) {
@@ -2379,6 +2080,7 @@ public class DataView {
    * 
    * @param channel
    * @param state
+   * @throws DaqException 
    */
   public void sendMesToPLCByPCI(int channel, byte state) {
     ErrorCode err = ErrorCode.Success;
@@ -2429,58 +2131,172 @@ public class DataView {
     COM8.close();
     usb.visaClear();
   }
+  ///////////////////////////////////////////////////////////////////////////
+  class Timer1Listener implements ActionListener {
 
-  /**
-   * 流程控制
-   */
-  public void startTest() {
-    setTxtStopFieldRUN();
-    initTable();
-    new Thread() {
-      public void run() {
-        try {
-          Thread.sleep(3000);
-          test_2();
-          for (int i = 1; i <= 14; i++) {
-            setResValueAtRow(i);
-          }
-          if(isPassed()) {
-            setTxtStopFieldPASS();
-          }
-          else
-            setTxtStopFieldNG();
-        } catch (InterruptedException e) {
-          
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if(!txtStop.getText().equals("RUN")) {
+        printBUT1_LL = false;
+        BUT1_SET = false;
+        rtimes01 = 0;
+        ALLOWTEST_R1 = false;
+        ALLOWTEST_R2 = false;
+        ALLOWTEST_R3 = false;
+      }
+      if(ALLOWTEST_R1) {
+        R_measure(1);
+      }
+      else if(ALLOWTEST_R2) {
+        R_measure(5);
+      }
+      else if(ALLOWTEST_R3) {
+        R_measure(9);
+      }
+      textField13.setText(R_testTimes + "");
+      //addRecord();
+      if(ALLDIALOGISSHOW) {
+        ALLDIALOGISSHOW = false;
+        txtStop.setText(testState);
+      }
+      if(txtStop.getText().equals("WAIT")) {
+        txtStop.setBackground(new Color(255, 255, 0));
+      }
+      else if(txtStop.getText().equals("RUN")) {
+        setTxtStopFieldRUN();
+      }
+      else if(txtStop.getText().equals("PASS")){
+        setTxtStopFieldPASS();
+        timeInterValRSTjueyuan++;
+        if(timeInterValRSTjueyuan % 2 == 0) {
+          jueyuanTestReset();
         }
       }
-    }.start();
-
-  }
-
-  public void startTest_righiKey() {
-    setTxtStopFieldRUN();
-    initTable();
-    new Thread() {
-      public void run() {
-        try {
-          Thread.sleep(3000);
-          test_1();
-          for (int i = 1; i <= 14; i++) {
-            setResValueAtRow(i);
-          }
-          if(isPassed()) {
-            setTxtStopFieldPASS();
-          }
-          else
-            setTxtStopFieldNG();
-        } catch (InterruptedException e) {
-          
+      else if(txtStop.getText().equals("NG")) {
+        setTxtStopFieldNG();
+        timeInterValRSTjueyuan++;
+        if(timeInterValRSTjueyuan % 2 == 0) {
+          jueyuanTestReset();
         }
       }
-    }.start();
-
+      else if(txtStop.getText().equals("STOP")) {
+        setTxtStopFieldSTOP();
+        timeInterValRSTjueyuan++;
+        if(timeInterValRSTjueyuan % 2 == 0) {
+          jueyuanTestReset();
+        }
+      }
+      if(jueyuanTestBool01 || jueyuanTestBool02) {
+        jueyuanTestBool01 = false;
+        jueyuanTestBool02 = false;
+        jueyuanTestReset();
+        timer2.start();
+      }
+      //如果readPortState()返回值包含0x01
+      if(readPortState() == (byte)0x01) {
+        if(JUETYANNUM.equals("JUYUANNUM_01")) {
+          setValueAt(13, "ok");
+          setResValueAtRow(13);
+        }
+        else if(JUETYANNUM.equals("JUYUANNUM_02")) {
+          JUETYANNUM = "";
+          setValueAt(14, "ok");
+          setResValueAtRow(14); 
+        }
+        outExcel = true;
+        jueyuanTestReset();
+      }
+      else if(readPortState() == (byte)0x02) {
+        if(JUETYANNUM.equals("JUYUANNUM_01")) {
+          setValueAt(13, "failed");
+          setResValueAtRow(13);
+          //IFNGBOOL = true;
+          //PLCWarmming();
+        }
+        else if(JUETYANNUM.equals("JUYUANNUM_02")) {
+          JUETYANNUM = "";
+          setValueAt(14, "failed");
+          setResValueAtRow(14);
+          //IFNGBOOL = true;
+          //PLCWarmming();
+        }
+        outExcel = true;
+      }
+      if(testState.equals("RUN")) {
+        s4sendtimes++;
+        if(s4sendtimes < 4) {
+          comWrite(COM4, "01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9"); 
+        }
+        else 
+          s4sendtimes = 11;
+      }
+      //拉力
+      if(printBUT1_LL) {
+        double value = xingchengLL(mydatap01) * 0.01 - 0.5;
+        if(value > 0) {
+          printBUT1_LL = false;
+          setValueAt(3, value);
+          setResValueAtRow(3);
+        }
+      }
+      else if(printBut2_LL) {
+        printBut2_LL = false;
+        double value = xingchengLL(mydatap02) * 0.01 - 0.5;
+        setValueAt(7, value);
+        setResValueAtRow(7);
+      }
+      else if(printBut3_LL) {
+        printBut3_LL = false;
+        double value = xingchengLL(mydatap03);
+        setValueAt(11, value);
+        setResValueAtRow(11);
+      }
+      //导出excl
+      if(outExcel) {
+        ECTESTSYSTools.recordtdDataOutToExcel();
+      }
+      ifPass();
+    }
   }
+  class Timer2Listener implements ActionListener {
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      jueyuanTest();
+      timer2.stop();
+    }
+  }
+  class Timer3Listener implements ActionListener {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+    //行程
+      if(boolXC1) {
+        boolXC1 = false;
+        if(table.getValueAt(4, 5).equals("?")) {
+          double value = xcResult1 - 0.4;
+          setValueAt(4, value);
+          setResValueAtRow(4);
+        }
+      }
+      if(boolXC2) {
+        boolXC2 = false;
+        if(table.getValueAt(8, 5).equals("?")) {
+          double value = xcResult2 - 0.4;
+          setValueAt(8, value);
+          setResValueAtRow(8);
+        }
+      }
+      if(boolXC3) {
+        boolXC3 = false;
+        if(table.getValueAt(12, 5).equals("?")) {
+          double value = xcResult3 - 0.45;
+          setValueAt(12, value);
+          setResValueAtRow(12);
+        }
+      }
+    }    
+  }
   ///////////////////////////////////////////////////////////////////////////
   /**
    * 定义一个类用来渲染某一单元格 用法：获取某一列值，其中单元格值为"PASS"则设为绿色，若为"NG"则设为红色

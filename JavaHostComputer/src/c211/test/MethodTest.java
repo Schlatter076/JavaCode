@@ -6,7 +6,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import Automation.BDaq.ByteByRef;
+import Automation.BDaq.DaqException;
+import Automation.BDaq.DeviceInformation;
+import Automation.BDaq.DeviceTreeNode;
+import Automation.BDaq.DioPort;
+import Automation.BDaq.ErrorCode;
+import Automation.BDaq.InstantDiCtrl;
+import Automation.BDaq.InstantDoCtrl;
 import c211.client.DataView;
 import c211.client.ViewResult;
 import c211.db.ECTESTSYSTools;
@@ -23,11 +33,17 @@ import c211.serialException.SerialPortParamFail;
 import gnu.io.SerialPort;
 
 public class MethodTest {
+  
+  public static InstantDoCtrl instantDoCtrl;
+  public static InstantDiCtrl instantDiCtrl;
+  private int portCount;
+  private byte[] portData;
+  private static byte pciState = 0x00;
 
   static SerialPortTool portTool = SerialPortTool.getSerialPortTool();
 
   public static void main(String[] args) throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse {
-    List<Recorddata> list = ECTESTSYSTools.getRecordtdData("2018-08-27", "C211");
+    /*List<Recorddata> list = ECTESTSYSTools.getRecordtdData("2018-08-27", "C211");
     System.out.println(list.size());
     
     Vector<String> vector = ViewResult.addRowDatas("2018-08-27");
@@ -42,7 +58,7 @@ public class MethodTest {
     System.out.println(DataView.isEquals(ch[2], "33"));
     
     char c = byteAsciiToChar(02);
-    System.out.println(c);
+    System.out.println(c);*/
     /*StringBuilder strBuilder = new StringBuilder();
     strBuilder.append("01 10 00 01 00 08 10 00 60 00 80 00 76 00 67 00 81 00 68 00 66 00 62 10 B9");
     // strBuilder.delete(0, strBuilder.length());
@@ -126,7 +142,94 @@ public class MethodTest {
     }
     SerialPortTool.closePort(COM4);
     */
+    instantDoCtrl = new InstantDoCtrl();
+    ArrayList<DeviceTreeNode> installedDevice = instantDoCtrl.getSupportedDevices();
+    /*for(DeviceTreeNode de: installedDevice) {
+      System.out.println(de);
+    }*/
+    DeviceTreeNode treeNode = installedDevice.get(0);
+    try {
+      instantDoCtrl.setSelectedDevice(new DeviceInformation(treeNode.toString()));
+    } catch (DaqException e) {
+      e.printStackTrace();
+    }
+    System.out.println(treeNode);
+    byte b = 0x01;
+    //for(int i = 0; i < 10; i++)
+    System.out.println(instantDoCtrl.Write(0, (byte)0));
+    byte by = 0;
+    ByteByRef ref = new ByteByRef(by);
+    System.out.println(instantDoCtrl.Read(0, ref));
+    System.out.println(ref.value);
+    System.out.println(b == 0x01);
+    System.out.println(ErrorCode.ErrorFuncNotInited);//The function is not initialized and can't be started.
+    System.out.println(ErrorCode.ErrorFuncNotSpted);//The required function is not supported.
+    System.out.println(ErrorCode.Success);//The operation is completed successfully.
+    
   }
+  /**
+   * 通过PCI向PLC发送数据
+   * 
+   * @param channel
+   * @param state
+   */
+  public void sendMesToPLCByPCI(int channel, byte state) {
+    ErrorCode err = ErrorCode.Success;
+    err = instantDoCtrl.Write(channel, state);
+    //instantDiCtrl.;
+    if (!err.equals(ErrorCode.Success)) {
+      handleError(err);
+    }
+  }
+  
+  public void sendMesToPLCByPCI(int channel, byte[] state) {
+    ErrorCode err = ErrorCode.Success;
+    int portCount = instantDoCtrl.getPortCount();
+    err = instantDoCtrl.Write(channel, portCount ,state);
+    //instantDiCtrl.;
+    if (!err.equals(ErrorCode.Success)) {
+      handleError(err);
+    }
+  }
+
+  /**
+   * 错误信息处理
+   * 
+   * @param err
+   *          ErrorCode
+   */
+  public void handleError(ErrorCode err) {
+    if (err != ErrorCode.Success) {
+      System.out.println("Error:"+err.toString());
+      //JOptionPane.showMessageDialog(null, "PCI出错了：" + err.toString());
+    }
+  }
+  /**
+   * 发送不良报警给PLC
+   */
+  public void PLCWarmming() {
+    //pciState = (byte) (pciState | 0x01);
+    byte[] bytes = {(byte) (pciState | 0x01)};
+    sendMesToPLCByPCI(0, bytes);
+  }
+
+  /**
+   * 取消报警
+   */
+  public void cancelWarmming() {
+    pciState = (byte) (pciState & 0xFE);
+    sendMesToPLCByPCI(0, pciState);
+  }
+
+  /**
+   * 绝缘测试复位
+   */
+  public void jueyuanTestReset() {
+    pciState = (byte) ((pciState | 0x04) & 0xFD);
+    sendMesToPLCByPCI(0, pciState);
+  }
+  
+  
   
   public static char byteAsciiToChar(int ascii){
     char ch = (char)ascii;
