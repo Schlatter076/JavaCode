@@ -44,6 +44,7 @@ public class SignIn {
   private User commom;
   private User admin;
   private boolean isDataView = false;
+  private boolean isNL3BDataView = false;
 
   /**
    * 主方法，运行登录界面
@@ -86,7 +87,8 @@ public class SignIn {
     ImageIcon img_1 = new ImageIcon("src/flower.jpg");
     JLabel imgLabel = new JLabel(img_1);
     signInFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
-    imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
+    imgLabel.setBounds(0, 0, 438, 326); // 背景图片的位置
+    //imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
     // 将contentPane设置成透明的
     ((JPanel) signInFrame.getContentPane()).setOpaque(false);
     
@@ -96,7 +98,7 @@ public class SignIn {
       
       @Override
       public void eventDispatched(AWTEvent event) {
-        if(!isDataView) {
+        if(!isDataView || !isNL3BDataView) {
         //当有键按下，且为ENTER键时，点击登录按钮
           if(((KeyEvent) event).getID() == KeyEvent.KEY_PRESSED && ((KeyEvent) event).getKeyChar() == KeyEvent.VK_ENTER) {
             signInButt.doClick();
@@ -125,13 +127,19 @@ public class SignIn {
     productLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(productLabel);
     
-    addProductButt = new JButton("\u6DFB\u52A0\u4EA7\u54C1\u578B\u53F7");
+    addProductButt = new JButton("选择产品型号");
     addProductButt.setOpaque(false);
     addProductButt.setBackground(new Color(224, 255, 255));
     addProductButt.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        JOptionPane.showMessageDialog(addProductButt, "目前只有一个机种", "提示", JOptionPane.NO_OPTION);
+        if(productTextF.getText().equals("C211")) {
+          productTextF.setText("NL3B");
+        }
+        else {
+          productTextF.setText("C211");
+        }
+        //JOptionPane.showMessageDialog(addProductButt, "目前只有一个机种", "提示", JOptionPane.NO_OPTION);
       }
     });
     addProductButt.setBounds(259, 90, 137, 37);
@@ -235,9 +243,20 @@ public class SignIn {
     boolean adminPwd = String.valueOf(passwordField.getPassword()).equals(admin.getPassword());
     // 判断用户名和密码是否和数据库中保存的一致
     if ((comUser && comPwd) || (adminUser && adminPwd)) {
-      isDataView = true;
-      signInFrame.dispose();
-      DataView.getDataView(idField.getEditor().getItem().toString());
+      if(productTextF.getText().equals("C211")) {
+        isDataView = true;
+        signInFrame.dispose();
+        DataView.getDataView(idField.getEditor().getItem().toString());
+      }
+      else if(productTextF.getText().equals("NL3B")) {
+        isNL3BDataView = true;
+        signInFrame.dispose();
+        NL3BDataView.getDataView(idField.getEditor().getItem().toString());
+      }
+      else {
+        JOptionPane.showMessageDialog(null, "产品型号不能为空", "错误", JOptionPane.ERROR_MESSAGE);
+      }
+      
     } else
       JOptionPane.showMessageDialog(null, "用户名或密码不正确", "错误", JOptionPane.ERROR_MESSAGE);
   }

@@ -22,6 +22,24 @@ public class MethodTest {
     Collections.sort(list);
     System.out.println(list+ ":::" + list.size());
     System.out.println(list.get(list.size() - 1));
+    
+    List<Integer> listData = new ArrayList<>();
+    for(int i = 0; i < 10; i++) {
+      listData.add(i);
+    }
+    System.out.println(listData);
+    listData.set(5, Integer.parseInt(String.valueOf(SerialPortTool.byteAsciiToChar(0x33))));
+    System.out.println(listData);
+    Collections.sort(listData);
+    System.out.println(listData);
+    
+    StringBuilder strBuilder = new StringBuilder();
+    strBuilder.append('3');
+    strBuilder.append('0');
+    strBuilder.append('3');
+    strBuilder.append('3');
+    
+    System.out.println(Integer.parseInt(strBuilder.toString()) == 3033);
   }
     
 }

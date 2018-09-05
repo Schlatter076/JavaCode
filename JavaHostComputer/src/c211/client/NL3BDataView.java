@@ -91,7 +91,7 @@ import javax.swing.JCheckBox;
  * @author Loyer
  * @coding utf8
  */
-public class DataView {
+public class NL3BDataView {
 
   private String userName;
   private JFrame dataFrame;
@@ -219,7 +219,7 @@ public class DataView {
   
   protected final USBHelper usb = new USBHelper();
   public static FileHandler logFileHandler;
-  protected static final String CLASS_NAME = DataView.class.getName();
+  protected static final String CLASS_NAME = NL3BDataView.class.getName();
   public static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
   public final String LOG_FOLDER = "log/";
   public static SimpleFormatter logFormatter;
@@ -235,7 +235,7 @@ public class DataView {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
-          DataView window = new DataView(user);
+          NL3BDataView window = new NL3BDataView(user);
           window.dataFrame.setVisible(true);
           window.initLoad(); 
         } catch (Exception e) {
@@ -247,13 +247,13 @@ public class DataView {
   /**
    * 本类构造器，接收登录页面传进User值
    */
-  public DataView(String user) {
+  public NL3BDataView(String user) {
     try {
       Path logPath = Paths.get(LOG_FOLDER);
       if (Files.notExists(logPath)) {
         Files.createDirectory(logPath);
       }
-      logFileHandler = new FileHandler(String.format("%s%sLog.txt", LOG_FOLDER, DataView.class.getSimpleName()));
+      logFileHandler = new FileHandler(String.format("%s%sLog.txt", LOG_FOLDER, NL3BDataView.class.getSimpleName()));
       logFormatter = new SimpleFormatter();
       logFileHandler.setFormatter(logFormatter);
       LOGGER.addHandler(logFileHandler);
@@ -817,7 +817,7 @@ public class DataView {
     serialPanel.add(nyPanel);
     nyPanel.setLayout(null);
 
-    pNameLabel = new JLabel("产品型号: C211");
+    pNameLabel = new JLabel("产品型号: NL-3B");
     pNameLabel.setFont(new Font("等线", Font.BOLD, 30));
     pNameLabel.setForeground(new Color(204, 102, 255));
     pNameLabel.setBackground(new Color(0, 51, 204));
@@ -905,9 +905,9 @@ public class DataView {
 
     // 创建行对象
     rowNum = new Vector<>();
-    List<C211Data> tableList = C211DataTools.getAllbyDb(); // 从数据库中获取c211表的内容
-    for (Iterator<C211Data> i = tableList.iterator(); i.hasNext();) {
-      C211Data rd = i.next();
+    List<NL3BData> tableList = NL3BDataTools.getAllbyDb(); // 从数据库中获取nl3b表的内容
+    for (Iterator<NL3BData> i = tableList.iterator(); i.hasNext();) {
+      NL3BData rd = i.next();
       Vector<String> vt = new Vector<>();
       vt.add("");
       vt.add(rd.getPdxuhao());
@@ -1058,14 +1058,14 @@ public class DataView {
   public void setResValueAtRow(int row) {
     switch (row) {
     case 1: {
-      if (getValueAt(1) <= 1d)
+      if (getValueAt(1) <= 1010 && getValueAt(1) >= 990)
         setTableTestResultPASS(1);
       else
         setTableTestResultNG(1);
     }
       break;
     case 2: {
-      if (getValueAt(2) <= 13.5d && getValueAt(2) >= 13d)
+      if (getValueAt(2) <= 8.5d && getValueAt(2) >= 8d)
         setTableTestResultPASS(2);
       else
         setTableTestResultNG(2);
@@ -1086,7 +1086,7 @@ public class DataView {
     }
       break;
     case 5: {
-      if (getValueAt(5) <= 2024.4d && getValueAt(5) >= 1983.6d)
+      if (getValueAt(5) <= 2525d && getValueAt(5) >= 2475d)
         setTableTestResultPASS(5);
       else
         setTableTestResultNG(5);
@@ -1121,7 +1121,7 @@ public class DataView {
     }
       break;
     case 10: {
-      if (getValueAt(10) <= 8.5d && getValueAt(10) >= 8d)
+      if (getValueAt(10) <= 1d)
         setTableTestResultPASS(10);
       else
         setTableTestResultNG(10);
@@ -2086,7 +2086,6 @@ public class DataView {
    * @return
    */
   public int xingchengLL(List<Integer> datajh) {
-    int XCLL = 0;
     List<Integer> list = new ArrayList<>();
     list.add(300);  //假定测试数据
     for(int i = 0; i < datajh.size(); i++) {
@@ -2095,28 +2094,7 @@ public class DataView {
       }
     }
     Collections.sort(list);
-    XCLL = list.get(list.size() - 1);
-    return XCLL;
-    /*int XCLL = 0;
-    List<Integer> diyipeck = new ArrayList<Integer>();
-    for (int i = 1; i < datajh.size() - 1; i++) {
-      if (datajh.get(i + 1) != 0 && datajh.get(i - 1) != 0 && datajh.get(i) < 500) {
-        if (datajh.get(i) > datajh.get(i + 1)) {
-          diyipeck.add(datajh.get(i));
-        }
-      }
-    }
-    if(diyipeck.size() == 0) {
-      printBUT1_LL = false;
-      printBut2_LL = false;
-      printBut3_LL = false;
-      return 0;
-    }
-    else {
-      Collections.sort(diyipeck);
-      XCLL = diyipeck.get(diyipeck.size() - 1);
-      return XCLL;
-    }*/
+    return list.get(list.size() - 1);
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -2307,7 +2285,7 @@ public class DataView {
           setValueAt(7, forMat(value));
           setResValueAtRow(7);
         }
-      }
+      } 
       else if(printBut3_LL) {
         double value = xingchengLL(mydatap03) * 0.01 - 0.14; 
         if(value > 0) {
