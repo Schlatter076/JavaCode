@@ -84,7 +84,8 @@ public class SignIn {
     signInFrame.setResizable(false); //窗口大小不可更改
     signInFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
     
-    ImageIcon img_1 = new ImageIcon("src/flower.jpg");
+    //ImageIcon img_1 = new ImageIcon("src/flower.jpg");
+    ImageIcon img_1 = new ImageIcon(signInFrame.getClass().getResource("/flower.jpg"));
     JLabel imgLabel = new JLabel(img_1);
     signInFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
     imgLabel.setBounds(0, 0, 438, 326); // 背景图片的位置
@@ -107,7 +108,7 @@ public class SignIn {
       }
     }, AWTEvent.KEY_EVENT_MASK);
     
-    Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
+    Image img = tk.getImage(signInFrame.getClass().getResource("/Kyokuto.png")); //替换窗口的咖啡图标
     signInFrame.setIconImage(img);
     signInFrame.getContentPane().setLayout(null);
 

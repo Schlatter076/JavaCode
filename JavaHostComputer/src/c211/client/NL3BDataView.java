@@ -430,7 +430,8 @@ public class NL3BDataView {
     dataFrame.setResizable(false); // 窗口大小不可改
     dataFrame.setUndecorated(true);
     // 更换背景图片
-    ImageIcon img_1 = new ImageIcon("src/run.jpg");
+    //ImageIcon img_1 = new ImageIcon("src/run.jpg");
+    ImageIcon img_1 = new ImageIcon(dataFrame.getClass().getResource("/run.jpg"));
     JLabel imgLabel = new JLabel(img_1);
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
     imgLabel.setBounds(0, 0, WIDTH, HEIGHT); // 背景图片的位置
@@ -451,8 +452,7 @@ public class NL3BDataView {
         }
       }
     }, AWTEvent.KEY_EVENT_MASK);
-    Image img = tk.getImage("src/Kyokuto.png");
-
+    Image img = tk.getImage(dataFrame.getClass().getResource("/Kyokuto.png"));
     dataFrame.setIconImage(img);
     dataFrame.getContentPane().setLayout(null);
 
