@@ -181,7 +181,7 @@ public class DataView {
   private List<Double> R_TEST = new ArrayList<Double>();
   private Timer timer1 = new Timer(500, new Timer1Listener());
   private Timer timer2 = new Timer(50, new Timer2Listener());
-  private Timer timer3 = new Timer(500, new Timer3Listener());
+  private Timer timer3 = new Timer(1, new Timer3Listener());
   private boolean printBUT1_LL = false;
   private boolean printBut2_LL = false;
   private boolean printBut3_LL = false;
@@ -1560,7 +1560,7 @@ public class DataView {
     return Integer.parseInt(getRecorddata().getRecordsum());
   }
   public int getTimeCount() {
-    return Integer.parseInt(getRecorddata().getRecordtime());
+    return Integer.parseInt(getRecorddata().getRecordts());
   }
   /**
    * 结果框显示值为PASS或者点测复选框被选中，判断测试值是否全部通过
@@ -1649,7 +1649,7 @@ public class DataView {
   }
   public void COM1DatasArrived() {
     try {
-      Thread.sleep(10);  //加延时，防止读取数据缺失
+      Thread.sleep(5);  //加延时，防止读取数据缺失
       byte[] datas = SerialPortTool.readByte(COM1);
       if(BUT3_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -1689,7 +1689,7 @@ public class DataView {
   }
   public void COM4DatasArriaved() {
     try {
-      Thread.sleep(10);  //加延时，防止读取数据丢失
+      Thread.sleep(5);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM4);
       for (int i = 0; i < datas.length - 14; i++) {
         //plc start ask    01 10 00 01 00 08 10 00    60 00 81 00 68 00 84 00 79 00 80 00 67 00 62    E7 3C
@@ -1722,7 +1722,7 @@ public class DataView {
               s4sendtimes = 0;
               JUETYANNUM = "";
               testState = "RUN";
-              txtStop.setText(testState);
+              //txtStop.setText(testState);
               setTxtStopFieldRUN();
               outExcel = false;
               cancelWarmming();
@@ -1738,7 +1738,7 @@ public class DataView {
               xcResult2 = 0;
               xcResult3 = 0;
               
-              Thread.sleep(500);
+              Thread.sleep(300);
               BUT1_SET = true;
             }
           }
@@ -1917,10 +1917,13 @@ public class DataView {
             && isEquals(datas[i + 6], "49") && isEquals(datas[i + 14], "62")) {
 
           if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
-            
-            System.out.println("行程1" + datas[i + 8]);
-            
-            xcResult1 = (double)(datas[i + 8] * 0.01);
+            if(datas[i + 8] < 0) {
+              int value = (int)datas[i + 8] + 256;  //大于127的字节数为负，故而加256将其转换原值
+              xcResult1 = (double)(value * 0.01);
+            }
+            else {
+              xcResult1 = (double)((int)datas[i + 8] * 0.01);
+            }
             boolXC1 = true;
           }
         }
@@ -1930,10 +1933,13 @@ public class DataView {
             && isEquals(datas[i + 6], "50") && isEquals(datas[i + 14], "62")) {
 
           if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
-            
-            System.out.println("行程2" + datas[i + 8]);
-            
-            xcResult2 = (double)(datas[i + 8] * 0.01);
+            if(datas[i + 8] < 0) {
+              int value = (int)datas[i + 8] + 256;  //大于127的字节数为负，故而加256将其转换原值
+              xcResult2 = (double)(value * 0.01);
+            }
+            else {
+              xcResult2 = (double)((int)datas[i + 8] * 0.01);
+            }
             boolXC2 = true;
           }
         }
@@ -1943,10 +1949,13 @@ public class DataView {
             && isEquals(datas[i + 6], "51") && isEquals(datas[i + 14], "62")) {
 
           if((!txtStop.getText().equals("NG")) && (!txtStop.getText().equals("STOP"))) {
-            
-            System.out.println("行程3" + datas[i + 8]);
-            
-            xcResult3 = (double)(datas[i + 8] * 0.01);
+            if(datas[i + 8] < 0) {
+              int value = (int)datas[i + 8] + 256;  //大于127的字节数为负，故而加256将其转换原值
+              xcResult3 = (double)(value * 0.01);
+            }
+            else {
+              xcResult3 = (double)((int)datas[i + 8] * 0.01);
+            }
             boolXC3 = true;
           }
         }
@@ -1962,7 +1971,7 @@ public class DataView {
   }
   public void COM7DatasArrived() {
     try {
-      Thread.sleep(10);  //加延时，防止读取数据丢失
+      Thread.sleep(5);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM7);
       if(BUT2_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -1999,7 +2008,7 @@ public class DataView {
   }
   public void COM8DataasArrived() {
     try {
-      Thread.sleep(10);  //加延时，防止读取数据丢失
+      Thread.sleep(5);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM8);
       if(BUT1_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -2077,6 +2086,17 @@ public class DataView {
    */
   public int xingchengLL(List<Integer> datajh) {
     int XCLL = 0;
+    List<Integer> list = new ArrayList<>();
+    list.add(300);  //假定测试数据
+    for(int i = 0; i < datajh.size(); i++) {
+      if(datajh.get(i) < 500) {
+        list.add(datajh.get(i));
+      }
+    }
+    Collections.sort(list);
+    XCLL = list.get(list.size() - 1);
+    return XCLL;
+    /*int XCLL = 0;
     List<Integer> diyipeck = new ArrayList<Integer>();
     for (int i = 1; i < datajh.size() - 1; i++) {
       if (datajh.get(i + 1) != 0 && datajh.get(i - 1) != 0 && datajh.get(i) < 500) {
@@ -2085,11 +2105,17 @@ public class DataView {
         }
       }
     }
-    Collections.sort(diyipeck);
-    if (diyipeck.size() >= 10) {
-      XCLL = diyipeck.get(diyipeck.size() - 1);
+    if(diyipeck.size() == 0) {
+      printBUT1_LL = false;
+      printBut2_LL = false;
+      printBut3_LL = false;
+      return 0;
     }
-    return XCLL;
+    else {
+      Collections.sort(diyipeck);
+      XCLL = diyipeck.get(diyipeck.size() - 1);
+      return XCLL;
+    }*/
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -2180,10 +2206,11 @@ public class DataView {
         timeCount = 0;
       }
       else if(txtStop.getText().equals("RUN")) {
-        if(progressBar.getValue() == 100) {
+        //设置进度条变化
+        /*if(progressBar.getValue() >= 90) {
           progressBar.setValue(0);
         }
-        progressBar.setValue(progressBar.getValue() + 10);  //设置进度条变化
+        progressBar.setValue(progressBar.getValue() + 15);*/
         timeCount++;
         tTimeField.setText((timeCount/2) + "");  //设置测试计时
         //setTxtStopFieldRUN();
@@ -2265,32 +2292,29 @@ public class DataView {
       if(printBUT1_LL) {
         double value = xingchengLL(mydatap01) * 0.01 - 0.23;
         if(value > 0) {
-          printBUT1_LL = false;
-          
-          drawPIC(mydatap01, dataCountOfLi);  //行程图
-          
-          setValueAt(3, value);
+          printBUT1_LL = false; 
+          //drawPIC(mydatap01, dataCountOfLi);  //行程图
+          setValueAt(3, forMat(value));
           setResValueAtRow(3);
         }
       }
       else if(printBut2_LL) {
-        printBut2_LL = false;
         double value = xingchengLL(mydatap02) * 0.01 - 0.2;
-        
-        drawPIC(mydatap02, dataCountOfLi);  //行程图
-        
-        setValueAt(7, value);
-        setResValueAtRow(7);
+        if(value > 0) {
+          printBut2_LL = false;
+          //drawPIC(mydatap02, dataCountOfLi);  //行程图
+          setValueAt(7, forMat(value));
+          setResValueAtRow(7);
+        }
       }
       else if(printBut3_LL) {
-        printBut3_LL = false;
-        double value = xingchengLL(mydatap03) * 0.01 - 0.14;
-        
-        drawPIC(mydatap03, dataCountOfLi);  //行程图
-        
-        
-        setValueAt(11, value);
-        setResValueAtRow(11);
+        double value = xingchengLL(mydatap03) * 0.01 - 0.14; 
+        if(value > 0) {
+          printBut3_LL = false;
+          //drawPIC(mydatap03, dataCountOfLi);  //行程图
+          setValueAt(11, forMat(value));
+          setResValueAtRow(11);
+        }
       }
       //导出excl
       if(outExcel) {
@@ -2308,15 +2332,24 @@ public class DataView {
     }
   }
   class Timer3Listener implements ActionListener {
+    
+    private int barValue = 0;
 
     @Override
     public void actionPerformed(ActionEvent e) {
-    //行程
+      if(txtStop.getText().equals("RUN")) {
+        if(barValue / 2 == 100) {
+          barValue = 0;
+        }
+        barValue++;
+        progressBar.setValue(barValue/2);
+      }
+      //行程
       if(boolXC1) {
         boolXC1 = false;
         if(table.getValueAt(4, 5).equals("?")) {
           double value = xcResult1 - 0.4;
-          setValueAt(4, value);
+          setValueAt(4, forMat(value));
           setResValueAtRow(4);
         }
       }
@@ -2324,7 +2357,7 @@ public class DataView {
         boolXC2 = false;
         if(table.getValueAt(8, 5).equals("?")) {
           double value = xcResult2 - 0.4;
-          setValueAt(8, value);
+          setValueAt(8, forMat(value));
           setResValueAtRow(8);
         }
       }
@@ -2332,7 +2365,7 @@ public class DataView {
         boolXC3 = false;
         if(table.getValueAt(12, 5).equals("?")) {
           double value = xcResult3 - 0.45;
-          setValueAt(12, value);
+          setValueAt(12, forMat(value));
           setResValueAtRow(12);
         }
       }
