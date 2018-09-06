@@ -95,7 +95,8 @@ public class USBHelperTool {
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
     
     //更换背景图片 
-    ImageIcon img_1 = new ImageIcon("src/back.jpg"); 
+    ImageIcon img_1 = new ImageIcon(frame.getClass().getResource("/flower.jpg"));
+    //ImageIcon img_1 = new ImageIcon("src/back.jpg"); 
     JLabel imgLabel = new JLabel(img_1);
     frame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE)); 
     imgLabel.setBounds(0,0,img_1.getIconWidth(), img_1.getIconHeight()); //背景图片的位置
@@ -103,7 +104,8 @@ public class USBHelperTool {
     ((JPanel)frame.getContentPane()).setOpaque(false);
     
     Toolkit tk = Toolkit.getDefaultToolkit();
-    Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
+    Image img = tk.getImage(frame.getClass().getResource("/Kyokuto.png")); //替换窗口的咖啡图标
+    //Image img = tk.getImage("src/Kyokuto.png"); //替换窗口的咖啡图标
     frame.setIconImage(img);
     frame.getContentPane().setLayout(null);
     

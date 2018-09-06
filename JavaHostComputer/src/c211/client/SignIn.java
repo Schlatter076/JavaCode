@@ -26,7 +26,6 @@ import javax.swing.SwingConstants;
 import java.awt.event.ActionListener;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class SignIn {
@@ -135,12 +134,11 @@ public class SignIn {
       @Override
       public void mouseClicked(MouseEvent e) {
         if(productTextF.getText().equals("C211")) {
-          productTextF.setText("NL3B");
+          productTextF.setText("NL-3B");
         }
         else {
           productTextF.setText("C211");
         }
-        //JOptionPane.showMessageDialog(addProductButt, "目前只有一个机种", "提示", JOptionPane.NO_OPTION);
       }
     });
     addProductButt.setBounds(259, 90, 137, 37);
@@ -184,17 +182,6 @@ public class SignIn {
     passwordLabel.setFont(new Font("等线", Font.PLAIN, 14));
     signInFrame.getContentPane().add(passwordLabel);
     
-    //passwordField = new JPasswordField();
-    passwordField.addKeyListener(new KeyAdapter() {
-      @Override
-      public void keyPressed(KeyEvent e) {
-        //监听Enter键
-        if(e.getKeyChar() == KeyEvent.VK_ENTER ) {
-          //getSignInEvent();
-          signInButt.doClick();
-        }  
-      }
-    });
     passwordField.setText(commom.getPassword());
     //passwordField.setFocusable(true);
     //passwordField.setRequestFocusEnabled(true);
@@ -249,7 +236,7 @@ public class SignIn {
         signInFrame.dispose();
         DataView.getDataView(idField.getEditor().getItem().toString());
       }
-      else if(productTextF.getText().equals("NL3B")) {
+      else if(productTextF.getText().equals("NL-3B")) {
         isNL3BDataView = true;
         signInFrame.dispose();
         NL3BDataView.getDataView(idField.getEditor().getItem().toString());

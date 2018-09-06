@@ -638,7 +638,7 @@ public class NL3BDataView {
     viewResultMnItm.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if (userName.equals("admin")) {
-          ViewResult.getViewResult();
+          NLviewResult.getViewResult();
           // initCountAndPieChart();
         } else
           JOptionPane.showMessageDialog(null, "你没有权限操作", "警告", JOptionPane.WARNING_MESSAGE);

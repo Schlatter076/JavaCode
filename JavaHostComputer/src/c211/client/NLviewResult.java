@@ -1,9 +1,13 @@
 package c211.client;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -11,9 +15,11 @@ import java.util.Vector;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -22,17 +28,9 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 import c211.db.ECTESTSYSTools;
-import c211.db.Recorddata;
+import c211.db.NLrecorddata;
 
-import java.awt.Color;
-import java.awt.Component;
-import javax.swing.JScrollPane;
-import javax.swing.JComboBox;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-public class ViewResult {
-
+public class NLviewResult {
   private JFrame frame;
   private JTable table;
   private JButton viewAllButt;
@@ -49,7 +47,7 @@ public class ViewResult {
     EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
-          ViewResult window = new ViewResult();
+          NLviewResult window = new NLviewResult();
           window.frame.setVisible(true);
         } catch (Exception e) {
           e.printStackTrace();
@@ -57,21 +55,7 @@ public class ViewResult {
       }
     });
   }
-
-  /*public static void main(String[] args) {
-    EventQueue.invokeLater(new Runnable() {
-      public void run() {
-        try {
-          ViewResult window = new ViewResult();
-          window.frame.setVisible(true);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    });
-  }
-*/
-  public ViewResult() {
+  public NLviewResult() {
     initialize();
   }
   /**
@@ -182,10 +166,10 @@ public class ViewResult {
    */
   public static Vector<String> addRowDatas(String recordtime) {
     Vector<String> vt = new Vector<>();
-    List<Recorddata> tableList = ECTESTSYSTools.getRecordtdData(recordtime, "C211");
+    List<NLrecorddata> tableList = ECTESTSYSTools.getNLRecordtdData(recordtime, "NL-3B");
     if (tableList != null) {
-      for (Iterator<Recorddata> it = tableList.iterator(); it.hasNext();) {
-        Recorddata rd = it.next();
+      for (Iterator<NLrecorddata> it = tableList.iterator(); it.hasNext();) {
+        NLrecorddata rd = it.next();
         vt.add(" ");
         vt.add(rd.getRecordname());
         vt.add(rd.getRecordsum());
@@ -206,11 +190,11 @@ public class ViewResult {
    */
   public static Vector<Object> addRowDatas() {
     Vector<Object> rowDatas = new Vector<>();
-    List<Recorddata> tableList = ECTESTSYSTools.getRecordtdData();
+    List<NLrecorddata> tableList = ECTESTSYSTools.getNLRecordtdData();
     if (tableList != null) {
-      for (Iterator<Recorddata> it = tableList.iterator(); it.hasNext();) {
+      for (Iterator<NLrecorddata> it = tableList.iterator(); it.hasNext();) {
         Vector<String> vt = new Vector<>();
-        Recorddata rd = it.next();
+        NLrecorddata rd = it.next();
         vt.add(" ");
         vt.add(rd.getRecordname());
         vt.add(rd.getRecordsum());
@@ -260,7 +244,7 @@ public class ViewResult {
         ECTESTSYSTools.addrecord(str);
       }
       else {
-        String sql = "update recordtd set recordname='"+ str[0] +"',recordsum='"+str[1]+"',recordok='"+str[2]+"',"
+        String sql = "update NLrecord set recordname='"+ str[0] +"',recordsum='"+str[1]+"',recordok='"+str[2]+"',"
             + "recordng='"+str[3]+"',recordts='"+str[4]+"',recordtime='"+str[5]+"' where recordtime='"+str[5]+"'";
         ECTESTSYSTools.updateRecord(sql);
       }

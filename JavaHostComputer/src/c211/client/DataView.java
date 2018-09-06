@@ -1663,6 +1663,7 @@ public class DataView {
             sb.append(SerialPortTool.byteAsciiToChar(datas[i + 10]));
             sb.append(SerialPortTool.byteAsciiToChar(datas[i + 11]));
             int BUT3_result = Integer.parseInt(sb.toString());
+            LOGGER.log(Level.INFO, String.format("拉力3的值： %s.", BUT3_result + ""));
             rtimes03++;
             if(rtimes03 > (dataCountOfLi - 1))  rtimes03 = 0;
             mydatap03.set(rtimes03, BUT3_result);
