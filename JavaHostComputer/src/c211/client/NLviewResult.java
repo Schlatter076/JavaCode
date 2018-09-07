@@ -55,6 +55,9 @@ public class NLviewResult {
       }
     });
   }
+  public static void main(String[] args) {
+    getViewResult();
+  }
   public NLviewResult() {
     initialize();
   }

@@ -177,6 +177,26 @@ public class NL3BDataView {
   private int rtimes01 = 0;
   private int rtimes02 = 0;
   private int rtimes03 = 0;
+  
+  private List<NL3BRecoupData> list = RecoupDataTool.getNl3bRecoupData();
+  private NL3BRecoupData data = list.get(0);
+  /**拉力1补偿值*/
+  private double FULL1 = data.getPULL1();
+  /**拉力2补偿值*/
+  private double FULL2 = data.getPULL2();
+  /**拉力3补偿值*/
+  private double FULL3 = data.getPULL3();
+  /**电阻补偿值*/
+  private double RESIS = data.getRES();
+  /**电压补偿值*/
+  private double VOL = data.getVOL();
+  /**行程1补偿值*/
+  private double STROKE1 = data.getSTROKE1();
+  /**行程2补偿值*/
+  private double STROKE2 = data.getSTROKE2();
+  /**行程3补偿值*/
+  private double STROKE3 = data.getSTROKE3();
+  
   private int timeInterValRSTjueyuan = 0;
   private List<Double> R_TEST = new ArrayList<Double>();
   private Timer timer1 = new Timer(500, new Timer1Listener());
@@ -373,7 +393,8 @@ public class NL3BDataView {
   public void R_measure(int row) {
     usb.visaWrite(":MEASure:RESistance?");
     R_result = Double.parseDouble(usb.visaRead());
-    double value_xiuzheng = R_result - 1.4d; // 修正回读值
+    double value_xiuzheng = R_result - RESIS; // 修正回读值
+    //double value_xiuzheng = R_result - 1.4d; // 修正回读值
     R_testTimes++;
     R_TEST.add(value_xiuzheng);
     if(R_testTimes > 1) {
@@ -397,7 +418,8 @@ public class NL3BDataView {
    */
   public void V_measure(int row) {
     usb.visaWrite(":measure:voltage:DC?");
-    V_result = Double.parseDouble(usb.visaRead());
+    V_result = Double.parseDouble(usb.visaRead()) - VOL;
+    //V_result = Double.parseDouble(usb.visaRead());
     setValueAt(row, forMat(V_result));
     setResValueAtRow(row);
   }
@@ -431,13 +453,13 @@ public class NL3BDataView {
     dataFrame.setUndecorated(true);
     // 更换背景图片
     //ImageIcon img_1 = new ImageIcon("src/run.jpg");
-    ImageIcon img_1 = new ImageIcon(dataFrame.getClass().getResource("/run.jpg"));
+    /*ImageIcon img_1 = new ImageIcon(dataFrame.getClass().getResource("/run.jpg"));
     JLabel imgLabel = new JLabel(img_1);
     dataFrame.getLayeredPane().add(imgLabel, new Integer(Integer.MIN_VALUE));
     imgLabel.setBounds(0, 0, WIDTH, HEIGHT); // 背景图片的位置
     //imgLabel.setBounds(0, 0, img_1.getIconWidth(), img_1.getIconHeight()); // 背景图片的位置
     // 将contentPane设置成透明的
-    ((JPanel) dataFrame.getContentPane()).setOpaque(false);
+    ((JPanel) dataFrame.getContentPane()).setOpaque(false);*/
 
     // 替换窗口的咖啡图标
     Toolkit tk = Toolkit.getDefaultToolkit();
@@ -625,6 +647,17 @@ public class NL3BDataView {
     editMenu.add(debugToolMnItm);
 
     testOptionMnItm = new JMenuItem("测试选项");
+    testOptionMnItm.addActionListener(new ActionListener() {
+      
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        if (userName.equals("admin")) {
+          NL3BRecoup.getRecoup();
+          // initCountAndPieChart();
+        } else
+          JOptionPane.showMessageDialog(null, "你没有权限操作", "警告", JOptionPane.WARNING_MESSAGE);
+      }
+    });
     testOptionMnItm.setForeground(new Color(0, 0, 0));
     testOptionMnItm.setFont(new Font("等线", Font.PLAIN, 14));
     editMenu.add(testOptionMnItm);
@@ -2269,7 +2302,8 @@ public class NL3BDataView {
       }
       //拉力
       if(printBUT1_LL) {
-        double value = xingchengLL(mydatap01) * 0.01 - 0.23;
+        double value = xingchengLL(mydatap01) * 0.01 - FULL1;
+        //double value = xingchengLL(mydatap01) * 0.01 - 0.23;
         if(value > 0) {
           printBUT1_LL = false; 
           //drawPIC(mydatap01, dataCountOfLi);  //行程图
@@ -2278,7 +2312,8 @@ public class NL3BDataView {
         }
       }
       else if(printBut2_LL) {
-        double value = xingchengLL(mydatap02) * 0.01 - 0.2;
+        double value = xingchengLL(mydatap02) * 0.01 - FULL2;
+        //double value = xingchengLL(mydatap02) * 0.01 - 0.2;
         if(value > 0) {
           printBut2_LL = false;
           //drawPIC(mydatap02, dataCountOfLi);  //行程图
@@ -2287,7 +2322,8 @@ public class NL3BDataView {
         }
       } 
       else if(printBut3_LL) {
-        double value = xingchengLL(mydatap03) * 0.01 - 0.14; 
+        double value = xingchengLL(mydatap03) * 0.01 - FULL3; 
+        //double value = xingchengLL(mydatap03) * 0.01 - 0.14; 
         if(value > 0) {
           printBut3_LL = false;
           //drawPIC(mydatap03, dataCountOfLi);  //行程图
@@ -2327,7 +2363,8 @@ public class NL3BDataView {
       if(boolXC1) {
         boolXC1 = false;
         if(table.getValueAt(4, 5).equals("?")) {
-          double value = xcResult1 - 0.4;
+          double value = xcResult1 - STROKE1;
+          //double value = xcResult1 - 0.4;
           setValueAt(4, forMat(value));
           setResValueAtRow(4);
         }
@@ -2335,7 +2372,8 @@ public class NL3BDataView {
       if(boolXC2) {
         boolXC2 = false;
         if(table.getValueAt(8, 5).equals("?")) {
-          double value = xcResult2 - 0.4;
+          double value = xcResult2 - STROKE2;
+          //double value = xcResult2 - 0.4;
           setValueAt(8, forMat(value));
           setResValueAtRow(8);
         }
@@ -2343,7 +2381,8 @@ public class NL3BDataView {
       if(boolXC3) {
         boolXC3 = false;
         if(table.getValueAt(12, 5).equals("?")) {
-          double value = xcResult3 - 0.45;
+          double value = xcResult3 - STROKE3;
+          //double value = xcResult3 - 0.45;
           setValueAt(12, forMat(value));
           setResValueAtRow(12);
         }
