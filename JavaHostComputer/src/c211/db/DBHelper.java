@@ -39,10 +39,8 @@ public class DBHelper {
       connection = DriverManager.getConnection(url, username, password);
     } catch(ClassNotFoundException e) {
       System.err.println("JDBC驱动加载失败");
-      e.printStackTrace();
     } catch(SQLException e) {
       System.err.println("无法连接到数据库");
-      e.printStackTrace();
     }
     return connection;
   }

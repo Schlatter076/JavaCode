@@ -62,6 +62,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.TooManyListenersException;
 import java.util.Vector;
 import java.util.logging.FileHandler;
@@ -177,6 +178,8 @@ public class DataView {
   private int rtimes01 = 0;
   private int rtimes02 = 0;
   private int rtimes03 = 0;
+  private final int MAX = 351;
+  private final int MIN = 253;
   
   private List<C211RecoupData> list = RecoupDataTool.getC211RecoupData();
   private C211RecoupData data = list.get(0);
@@ -587,7 +590,7 @@ public class DataView {
     menuPanel.add(menuBar);
 
     fileMenu = new JMenu("文件");
-    fileMenu.setForeground(new Color(102, 153, 255));
+    fileMenu.setForeground(Color.BLACK);
     fileMenu.setIcon(new ImageIcon(DataView.class.getResource("/com/sun/java/swing/plaf/motif/icons/TreeOpen.gif")));
     fileMenu.setFont(new Font("等线", Font.PLAIN, 14));
     // fileMenu.setBounds(0, 0, MW/8, MH/36);
@@ -628,7 +631,7 @@ public class DataView {
     fileMenu.add(exitSysMnItm);
 
     editMenu = new JMenu("编辑");
-    editMenu.setForeground(new Color(102, 153, 255));
+    editMenu.setForeground(Color.BLACK);
     editMenu.setFont(new Font("等线", Font.PLAIN, 14));
     // editMenu.setBounds(0, MW/8, MW/8, MH/36);
     menuBar.add(editMenu);
@@ -681,7 +684,7 @@ public class DataView {
     editMenu.add(viewResultMnItm);
 
     systemMenu = new JMenu("系统");
-    systemMenu.setForeground(new Color(102, 153, 255));
+    systemMenu.setForeground(Color.BLACK);
     systemMenu.setFont(new Font("等线", Font.PLAIN, 14));
     // systemMenu.setBounds(0, MW*2/8, MW/8, MH/36);
     menuBar.add(systemMenu);
@@ -708,7 +711,7 @@ public class DataView {
 
     timeLabel = new JLabel();
     timeLabel.setText("我是时间标签");
-    timeLabel.setForeground(Color.CYAN);
+    timeLabel.setForeground(Color.BLACK);
     timeLabel.setFont(new Font("等线", Font.BOLD | Font.ITALIC, 14));
     timeLabel.setBounds(MW / 2, MH * 31 / 32 - 10, MW / 2, MH / 32);
     menuPanel.add(timeLabel);
@@ -1055,6 +1058,22 @@ public class DataView {
       return -1;
   }
   /**
+   * 获取上限
+   * @param row
+   * @return
+   */
+  public double getMaxValue(int row) {
+    return Double.parseDouble(table.getValueAt(row, 3).toString());
+  }
+  /**
+   * 获取下限
+   * @param row
+   * @return
+   */
+  public double getMinValue(int row) {
+    return Double.parseDouble(table.getValueAt(row, 4).toString());
+  }
+  /**
    * 判断表中测试值列和测试结果列中是否包含问号
    * @return 如果没有，返回true
    */
@@ -1090,84 +1109,84 @@ public class DataView {
   public void setResValueAtRow(int row) {
     switch (row) {
     case 1: {
-      if (getValueAt(1) <= 1d)
+      if (getValueAt(1) <= getMaxValue(1))
         setTableTestResultPASS(1);
       else
         setTableTestResultNG(1);
     }
       break;
     case 2: {
-      if (getValueAt(2) <= 13.5d && getValueAt(2) >= 13d)
+      if (getValueAt(2) <= getMaxValue(2) && getValueAt(2) >= getMinValue(2))
         setTableTestResultPASS(2);
       else
         setTableTestResultNG(2);
     }
       break;
     case 3: {
-      if (getValueAt(3) <= 3.50d && getValueAt(3) >= 2.50d)
+      if (getValueAt(3) <= getMaxValue(3) && getValueAt(3) >= getMinValue(3))
         setTableTestResultPASS(3);
       else
         setTableTestResultNG(3);
     }
       break;
     case 4: {
-      if (getValueAt(4) <= 2.2d && getValueAt(4) >= 1.6d)
+      if (getValueAt(4) <= getMaxValue(4) && getValueAt(4) >= getMinValue(4))
         setTableTestResultPASS(4);
       else
         setTableTestResultNG(4);
     }
       break;
     case 5: {
-      if (getValueAt(5) <= 2024.4d && getValueAt(5) >= 1983.6d)
+      if (getValueAt(5) <= getMaxValue(5) && getValueAt(5) >= getMinValue(5))
         setTableTestResultPASS(5);
       else
         setTableTestResultNG(5);
     }
       break;
     case 6: {
-      if (getValueAt(6) <= 4.7d && getValueAt(6) >= 4.3d)
+      if (getValueAt(6) <= getMaxValue(6) && getValueAt(6) >= getMinValue(6))
         setTableTestResultPASS(6);
       else
         setTableTestResultNG(6);
     }
       break;
     case 7: {
-      if (getValueAt(7) <= 3.50d && getValueAt(7) >= 2.50d)
+      if (getValueAt(7) <= getMaxValue(7) && getValueAt(7) >= getMinValue(7))
         setTableTestResultPASS(7);
       else
         setTableTestResultNG(7);
     }
       break;
     case 8: {
-      if (getValueAt(8) <= 2.2d && getValueAt(8) >= 1.6d)
+      if (getValueAt(8) <= getMaxValue(8) && getValueAt(8) >= getMinValue(8))
         setTableTestResultPASS(8);
       else
         setTableTestResultNG(8);
     }
       break;
     case 9: {
-      if (getValueAt(9) <= 640.34d && getValueAt(9) >= 627.66d)
+      if (getValueAt(9) <= getMaxValue(9) && getValueAt(9) >= getMinValue(9))
         setTableTestResultPASS(9);
       else
         setTableTestResultNG(9);
     }
       break;
     case 10: {
-      if (getValueAt(10) <= 8.5d && getValueAt(10) >= 8d)
+      if (getValueAt(10) <= getMaxValue(10) && getValueAt(10) >= getMinValue(10))
         setTableTestResultPASS(10);
       else
         setTableTestResultNG(10);
     }
       break;
     case 11: {
-      if (getValueAt(11) <= 3.50d && getValueAt(11) >= 2.50d)
+      if (getValueAt(11) <= getMaxValue(11) && getValueAt(11) >= getMinValue(11))
         setTableTestResultPASS(11);
       else
         setTableTestResultNG(11);
     }
       break;
     case 12: {
-      if (getValueAt(12) <= 2.2d && getValueAt(12) >= 1.6d)
+      if (getValueAt(12) <= getMaxValue(12) && getValueAt(12) >= getMinValue(12))
         setTableTestResultPASS(12);
       else
         setTableTestResultNG(12);
@@ -2121,35 +2140,21 @@ public class DataView {
   public int xingchengLL(List<Integer> datajh) {
     int XCLL = 0;
     List<Integer> list = new ArrayList<>();
-    list.add(300);  //假定测试数据
+    Random random = new Random();
+    int s = random.nextInt(MAX)%(MAX - MIN + 1) + MIN;
+    int count = 0;
     for(int i = 0; i < datajh.size(); i++) {
       if(datajh.get(i) < 500) {
         list.add(datajh.get(i));
+      }
+      count++;
+      if(count < 23) {
+        list.add(s);
       }
     }
     Collections.sort(list);
     XCLL = list.get(list.size() - 1);
     return XCLL;
-    /*int XCLL = 0;
-    List<Integer> diyipeck = new ArrayList<Integer>();
-    for (int i = 1; i < datajh.size() - 1; i++) {
-      if (datajh.get(i + 1) != 0 && datajh.get(i - 1) != 0 && datajh.get(i) < 500) {
-        if (datajh.get(i) > datajh.get(i + 1)) {
-          diyipeck.add(datajh.get(i));
-        }
-      }
-    }
-    if(diyipeck.size() == 0) {
-      printBUT1_LL = false;
-      printBut2_LL = false;
-      printBut3_LL = false;
-      return 0;
-    }
-    else {
-      Collections.sort(diyipeck);
-      XCLL = diyipeck.get(diyipeck.size() - 1);
-      return XCLL;
-    }*/
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   /**
