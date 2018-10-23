@@ -178,8 +178,8 @@ public class NL3BDataView {
   private int rtimes01 = 0;
   private int rtimes02 = 0;
   private int rtimes03 = 0;
-  private final int MAX = 351;
-  private final int MIN = 253;
+  private final int MAX = 651;
+  private final int MIN = 351;
   
   private List<NL3BRecoupData> list = RecoupDataTool.getNl3bRecoupData();
   private NL3BRecoupData data = list.get(0);
@@ -1702,7 +1702,7 @@ public class NL3BDataView {
   }
   public void COM1DatasArrived() {
     try {
-      Thread.sleep(5);  //加延时，防止读取数据缺失
+      Thread.sleep(50);  //加延时，防止读取数据缺失
       byte[] datas = SerialPortTool.readByte(COM1);
       if(BUT3_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -1742,7 +1742,7 @@ public class NL3BDataView {
   }
   public void COM4DatasArriaved() {
     try {
-      Thread.sleep(5);  //加延时，防止读取数据丢失
+      Thread.sleep(50);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM4);
       for (int i = 0; i < datas.length - 14; i++) {
         //plc start ask    01 10 00 01 00 08 10 00    60 00 81 00 68 00 84 00 79 00 80 00 67 00 62    E7 3C
@@ -2024,7 +2024,7 @@ public class NL3BDataView {
   }
   public void COM7DatasArrived() {
     try {
-      Thread.sleep(5);  //加延时，防止读取数据丢失
+      Thread.sleep(50);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM7);
       if(BUT2_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -2061,7 +2061,7 @@ public class NL3BDataView {
   }
   public void COM8DataasArrived() {
     try {
-      Thread.sleep(5);  //加延时，防止读取数据丢失
+      Thread.sleep(50);  //加延时，防止读取数据丢失
       byte[] datas = SerialPortTool.readByte(COM8);
       if(BUT1_SET) {
         for(int i = 0; i < datas.length - 15; i++) {
@@ -2479,16 +2479,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM1:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
@@ -2508,16 +2524,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM2:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
@@ -2537,16 +2569,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM3:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
@@ -2566,16 +2614,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM4:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
@@ -2595,16 +2659,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM7:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
@@ -2624,16 +2704,32 @@ public class NL3BDataView {
         @Override
         public void serialEvent(SerialPortEvent event) {
           switch (event.getEventType()) {
-          case SerialPortEvent.BI:
-          case SerialPortEvent.OE:
-          case SerialPortEvent.FE:
-          case SerialPortEvent.PE:
-          case SerialPortEvent.CD:
-          case SerialPortEvent.CTS:
-          case SerialPortEvent.DSR:
-          case SerialPortEvent.RI:
-          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
-            JOptionPane.showMessageDialog(null, "COM8:"+event.toString());
+          case SerialPortEvent.BI:  //10 通讯中断
+            JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+            break;
+          case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+            break;
+          case SerialPortEvent.FE:  // 9 帧错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+            break;
+          case SerialPortEvent.PE:  // 8 奇偶校验错误
+            JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+            break;
+          case SerialPortEvent.CD:  // 6 载波检测
+            JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+            break;
+          case SerialPortEvent.CTS:  // 3 清除待发送数据
+            JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+            break;
+          case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+            JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+            break;
+          case SerialPortEvent.RI:  // 5 振铃指示
+            JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+            break;
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             // 有数据到达-----可以开始处理
