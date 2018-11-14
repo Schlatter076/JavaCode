@@ -17,6 +17,7 @@ import c211.serialException.OutputStreamCloseFail;
 import c211.serialException.PortInUse;
 import c211.serialException.ReadDataFromSerialFail;
 import c211.serialException.SendToPortFail;
+import c211.serialException.SerialPortParamFail;
 import c211.serialException.TooManyListeners;
 import gnu.io.SerialPort;
 import gnu.io.SerialPortEvent;
@@ -32,7 +33,8 @@ public class MethodTest {
   protected Timer timer1 = new Timer(500, new Timer1Listener());
   
   public static void main(String[] args) throws Exception, NoSuchPort, PortInUse, Exception {
-    main_1();
+    test();
+    //main_1();
     /*EventQueue.invokeLater(new Runnable() {
       public void run() {
         try {
@@ -53,6 +55,69 @@ public class MethodTest {
     textArea = new JTextArea();
     textArea.setBounds(23, 10, 550, 426);
     dataFrame.getContentPane().add(textArea);
+  }
+  public static void test() throws SerialPortParamFail, NotASerialPort, NoSuchPort, PortInUse, TooManyListeners, Exception, Exception {
+    ArrayList<String> port = SerialPortTool.findPort();
+    for(String p : port) {
+      System.out.println(p);
+    }
+    COM1 = SerialPortTool.getPort("COM1", 9600, 8, 1, 0);
+    add(COM1, arg0 -> {
+      switch (arg0.getEventType()) {
+      case SerialPortEvent.BI:  //10 通讯中断
+        JOptionPane.showMessageDialog(null, "COM1:" + "通讯中断!");
+        break;
+      case SerialPortEvent.OE:  // 7 溢位（溢出）错误
+        JOptionPane.showMessageDialog(null, "COM1:" + "溢位（溢出）错误!");
+        break;
+      case SerialPortEvent.FE:  // 9 帧错误
+        JOptionPane.showMessageDialog(null, "COM1:" + "帧错误!");
+        break;
+      case SerialPortEvent.PE:  // 8 奇偶校验错误
+        JOptionPane.showMessageDialog(null, "COM1:" + "奇偶校验错误!");
+        break;
+      case SerialPortEvent.CD:  // 6 载波检测
+        JOptionPane.showMessageDialog(null, "COM1:" + "载波检测!");
+        break;
+      case SerialPortEvent.CTS:  // 3 清除待发送数据
+        JOptionPane.showMessageDialog(null, "COM1:" + "清除待发送数据!");
+        break;
+      case SerialPortEvent.DSR:  // 4 待发送数据准备好了
+        JOptionPane.showMessageDialog(null, "COM1:" + "待发送数据准备好了!");
+        break;
+      case SerialPortEvent.RI:  // 5 振铃指示
+        JOptionPane.showMessageDialog(null, "COM1:" + "振铃指示!");
+        break;
+      case SerialPortEvent.OUTPUT_BUFFER_EMPTY:  // 2 输出缓冲区已清空
+        JOptionPane.showMessageDialog(null, "COM1:" + "输出缓冲区已清空");
+        break;
+      case SerialPortEvent.DATA_AVAILABLE: {
+        // 有数据到达-----可以开始处理
+        try {
+          Thread.sleep(50);
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+        byte[] data = null;
+        try {
+          data = SerialPortTool.readByte(COM1);
+        } catch (ReadDataFromSerialFail e) {
+          e.printStackTrace();
+        } catch (InputStreamCloseFail e) {
+          e.printStackTrace();
+        }
+        String str = SerialPortTool.bytesToHex(data);
+        System.out.println(str);
+      }
+        break;
+      }
+    });
+    byte[] datas = {(byte) 0xf3, (byte) 0xf4, 0x00, 0x00, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0a};
+    SerialPortTool.write(COM1, datas);
+    Thread.sleep(2000);
+    String str1 = "f3 f4 00 ff ff 00 00 00 00 01 0a";
+    SerialPortTool.write(COM1, SerialPortTool.toByteArray(str1));
+    while(true);
   }
   public static void main_1() throws Exception, NotASerialPort, NoSuchPort, PortInUse {
     ArrayList<String> port = SerialPortTool.findPort();
